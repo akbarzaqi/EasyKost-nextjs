@@ -1,3 +1,5 @@
+'use client'
+
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -6,11 +8,28 @@ import {
 import { AppSidebar } from "@/styles/components/ui/app-sidebar"
 import { Plus, Bell, Settings } from "lucide-react"
 
+import { usePathname } from 'next/navigation'
+
+
 export default function AdminLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const pathname = usePathname()
+
+  const getTitleFromPath = (path: string) => {
+    const pathMap: Record<string, string> = {
+      "/admin/dashboard": "Dashboard",
+      "/admin/dashboard/hunian": "Hunian",
+      "/admin/dashboard/sewa": "Sewa",
+      "/admin/dashboard/tagihan": "Tagihan",
+      "/admin/dashboard/pembayaran": "Pembayaran",
+      "/admin/dashboard/pengguna": "Pengguna",
+    }
+    return pathMap[path] || "Dashboard"
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -22,20 +41,12 @@ export default function AdminLayout({
             <div className="flex items-center gap-4 flex-1">
               <SidebarTrigger className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" />
               <h1 className="text-lg font-semibold text-gray-900 tracking-tight">
-                Dashboard
+                {getTitleFromPath(pathname)}
               </h1>
             </div>
 
             {/* Right: Action Controls */}
             <div className="flex items-center gap-3">
-              {/* Generate + Plus Combined Button */}
-              <button
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-950 rounded-lg transition-all duration-150 hover:bg-blue-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                aria-label="Generate new"
-              >
-                <Plus className="h-4 w-4" />
-                Generate
-              </button>
               <button
                 className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 transition-colors duration-150 hover:text-gray-900 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 aria-label="Notifications"

@@ -22,19 +22,20 @@ import {
 import { cn } from "@/styles/lib/utils"
 
 const menuItems = [
-  { href: "/admin", icon: GridIcon, label: "Dashboard" },
-  { href: "/admin/hunian-sewa", icon: HomeIcon, label: "Hunian Sewa" },
-  { href: "/admin/tagihan", icon: FileTextIcon, label: "Tagihan" },
-  { href: "/admin/pembayaran", icon: CreditCardIcon, label: "Pembayaran" },
-  { href: "/admin/pengguna", icon: UsersIcon, label: "Pengguna" },
+  { href: "/admin/dashboard", icon: GridIcon, label: "Dashboard" },
+  { href: "/admin/dashboard/hunian", icon: HomeIcon, label: "Hunian" },
+  { href: "/admin/dashboard/sewa", icon: FileTextIcon, label: "Sewa" },
+  { href: "/admin/dashboard/tagihan", icon: FileTextIcon, label: "Tagihan" },
+  { href: "/admin/dashboard/pembayaran", icon: CreditCardIcon, label: "Pembayaran" },
+  { href: "/admin/dashboard/pengguna", icon: UsersIcon, label: "Pengguna" },
 ]
 
 export function AppSidebar() {
   const pathname = usePathname()
 
   const isActive = (href: string) => {
-    if (href === "/admin") {
-      return pathname === "/admin"
+    if (href === "/admin/dashboard") {
+      return pathname === "/admin/dashboard"
     }
     return pathname.startsWith(href)
   }
