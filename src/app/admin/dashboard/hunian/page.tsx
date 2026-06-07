@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Home, CheckCircle2, XCircle, Pencil, Eye, BedDouble, Wallet } from "lucide-react"
+import Link from "next/link"
 
 type Hunian = {
     id: number,
@@ -188,10 +189,12 @@ export default function AdminHunian() {
                                 className="pl-10 bg-white"
                             />
                         </div>
-                        <Button className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white">
-                            <Plus className="h-4 w-4" />
-                            <span className="hidden sm:inline">Tambah Hunian</span>
-                        </Button>
+                        <Link href="/admin/dashboard/hunian/tambah">
+                            <Button className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white">
+                                <Plus className="h-4 w-4" />
+                                <span className="hidden sm:inline">Tambah Hunian</span>
+                            </Button>
+                        </Link>
                     </div>
                 </div>
 
@@ -251,14 +254,18 @@ export default function AdminHunian() {
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Button size="sm" variant="outline" className="h-8 px-3 text-xs hover:bg-gray-100">
-                                                    <Pencil className="h-3 w-3 mr-1" />
-                                                    Edit
-                                                </Button>
-                                                <Button size="sm" variant="outline" className="h-8 px-3 text-xs hover:bg-gray-100">
-                                                    <Eye className="h-3 w-3 mr-1" />
-                                                    Detail
-                                                </Button>
+                                                <Link href={`/admin/dashboard/hunian/${hunian.id}/edit`}>
+                                                    <Button size="sm" variant="outline" className="h-8 px-3 text-xs hover:bg-gray-100">
+                                                        <Pencil className="h-3 w-3 mr-1" />
+                                                        Edit
+                                                    </Button>
+                                                </Link>
+                                                <Link href={`/admin/dashboard/hunian/${hunian.id}`}>
+                                                    <Button size="sm" variant="outline" className="h-8 px-3 text-xs hover:bg-gray-100">
+                                                        <Eye className="h-3 w-3 mr-1" />
+                                                        Detail
+                                                    </Button>
+                                                </Link>
                                             </div>
                                         </div>
                                     </CardContent>
