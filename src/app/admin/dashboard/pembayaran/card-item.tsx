@@ -1,3 +1,5 @@
+'use client'
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
@@ -11,6 +13,7 @@ type Pembayaran = {
 }
 
 export default function CardItem({ pembayaran }: { pembayaran: Pembayaran }) {
+    const router = useRouter()
     return (
         <div className="p-5 border border-gray-200 rounded-xl shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center gap-6 flex-wrap">
@@ -51,7 +54,12 @@ export default function CardItem({ pembayaran }: { pembayaran: Pembayaran }) {
                 </div>
 
                 <div className="flex items-center gap-2 ml-auto">
-                    <Button variant="outline" size="sm" className="hover:bg-gray-50">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="hover:bg-gray-50"
+                        onClick={() => router.push(`/admin/dashboard/pembayaran/${pembayaran.id}`)}
+                    >
                         Lihat Bukti
                     </Button>
                     <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
