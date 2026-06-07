@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { MdOutlineHomeWork, MdOutlinePersonOutline } from "react-icons/md"
 import { CgNotes } from "react-icons/cg"
 import { GoVerified } from "react-icons/go"
-import { Plus, FileText } from "lucide-react"
+import { Plus, FileText, TrendingUp } from "lucide-react"
 
 import { columns, data } from "./columns"
 import { DataTable } from "./data-table"
@@ -33,6 +33,10 @@ type Stat = {
     iconColor: string
     description?: string
     highlight?: boolean
+    delta?: {
+        positive: boolean
+        value: string
+    }
 }
 
 export default function AdminDashboard() {
