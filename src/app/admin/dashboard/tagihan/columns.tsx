@@ -1,6 +1,7 @@
 'use client'
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import { Pencil, CheckCircle2 } from "lucide-react"
+import { Pencil, CheckCircle2, XCircle } from "lucide-react"
 
 type Tagihan = {
     id: string,
@@ -133,17 +134,36 @@ export const columns = [
         header: 'Aksi',
         accessorKey: 'actions',
         cell: ({ row }: any) => {
-            const status = row.original.status
+            const router = useRouter()
+            const tagihan = row.original
+            const status = tagihan.status
             return (
                 <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="h-8 px-3 text-xs hover:bg-gray-100">
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-3 text-xs hover:bg-gray-100"
+                        onClick={() => router.push(`/admin/dashboard/tagihan/${tagihan.id}/edit`)}
+                    >
                         <Pencil className="h-3 w-3 mr-1" />
                         Edit
                     </Button>
-                    {status !== 'lunas' && (
-                        <Button size="sm" className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Verifikasi
+                    {status === 'verifikasi' && (
+                        <>
+                            <Button size="sm" className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                Verifikasi
+                            </Button>
+                            <Button size="sm" variant="destructive" className="h-8 px-3 text-xs">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Tolak
+                            </Button>
+                        </>
+                    )}
+                    {status === 'belum_bayar' && (
+                        <Button size="sm" variant="destructive" className="h-8 px-3 text-xs">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Tolak
                         </Button>
                     )}
                 </div>
