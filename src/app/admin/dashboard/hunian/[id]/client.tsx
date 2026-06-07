@@ -10,6 +10,9 @@ import { BedDouble, Wallet, ArrowLeft, Pencil } from 'lucide-react'
 type Hunian = {
   id: number
   name: string
+  harga_kost: number
+  harga_wifi: number
+  harga_air: number
   total_price: number
   type: string
   status: string
@@ -21,6 +24,9 @@ const data: Hunian[] = [
   {
     id: 1,
     name: 'Kamar A1',
+    harga_kost: 800000,
+    harga_wifi: 100000,
+    harga_air: 100000,
     total_price: 1000000,
     type: 'Premium Room',
     status: 'Terisi',
@@ -30,6 +36,9 @@ const data: Hunian[] = [
   {
     id: 2,
     name: 'Kamar B2',
+    harga_kost: 550000,
+    harga_wifi: 100000,
+    harga_air: 100000,
     total_price: 750000,
     type: 'Standard Room',
     status: 'Kosong',
@@ -39,6 +48,9 @@ const data: Hunian[] = [
   {
     id: 3,
     name: 'Kamar C3',
+    harga_kost: 300000,
+    harga_wifi: 100000,
+    harga_air: 100000,
     total_price: 500000,
     type: 'Economy Room',
     status: 'Terisi',
@@ -143,11 +155,26 @@ export default function HunianDetailClient({ id }: { id: string }) {
                 <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-50">
                   <Wallet className="h-4 w-4 text-emerald-600" />
                 </span>
-                <span className="text-sm font-medium text-gray-500">Harga / Bulan</span>
+                <span className="text-sm font-medium text-gray-500">Rincian Harga</span>
               </div>
-              <p className="text-2xl font-bold text-emerald-600">
-                {formatPrice(hunian.total_price)}
-              </p>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Kost</span>
+                  <span className="font-medium text-gray-900">{formatPrice(hunian.harga_kost)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">WiFi</span>
+                  <span className="font-medium text-gray-900">{formatPrice(hunian.harga_wifi)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Air</span>
+                  <span className="font-medium text-gray-900">{formatPrice(hunian.harga_air)}</span>
+                </div>
+                <div className="pt-1.5 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Total</span>
+                  <span className="text-lg font-bold text-emerald-600">{formatPrice(hunian.total_price)}</span>
+                </div>
+              </div>
             </div>
 
             <div className="p-6 md:border-r border-b md:border-b-0 border-gray-100">

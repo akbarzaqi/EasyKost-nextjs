@@ -15,7 +15,9 @@ export default function TambahHunian() {
   const [name, setName] = useState('')
   const [type, setType] = useState('')
   const [status, setStatus] = useState('Kosong')
-  const [totalPrice, setTotalPrice] = useState('')
+  const [hargaKost, setHargaKost] = useState('')
+  const [hargaWifi, setHargaWifi] = useState('')
+  const [hargaAir, setHargaAir] = useState('')
   const [description, setDescription] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewImage, setPreviewImage] = useState('')
@@ -36,7 +38,9 @@ export default function TambahHunian() {
     const newErrors: Record<string, string> = {}
     if (!name.trim()) newErrors.name = 'Nama kamar wajib diisi'
     if (!type.trim()) newErrors.type = 'Tipe kamar wajib dipilih'
-    if (!totalPrice || Number(totalPrice) <= 0) newErrors.total_price = 'Harga harus lebih dari 0'
+    if (!hargaKost || Number(hargaKost) < 0) newErrors.harga_kost = 'Harga kost harus diisi'
+    if (!hargaWifi || Number(hargaWifi) < 0) newErrors.harga_wifi = 'Harga wifi harus diisi'
+    if (!hargaAir || Number(hargaAir) < 0) newErrors.harga_air = 'Harga air harus diisi'
     if (!description.trim()) newErrors.description = 'Deskripsi wajib diisi'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -45,11 +49,15 @@ export default function TambahHunian() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
+    const total_price = Number(hargaKost) + Number(hargaWifi) + Number(hargaAir)
     const newHunian = {
       name,
       type,
       status,
-      total_price: Number(totalPrice),
+      harga_kost: Number(hargaKost),
+      harga_wifi: Number(hargaWifi),
+      harga_air: Number(hargaAir),
+      total_price,
       description,
       image_url: previewImage || '/images/room1.jpg',
     }
@@ -138,25 +146,62 @@ export default function TambahHunian() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="total_price" className="text-sm font-medium text-gray-700">
-                      Harga per Bulan <span className="text-rose-500">*</span>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Rincian Harga per Bulan <span className="text-rose-500">*</span>
                     </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
-                      <Input
-                        id="total_price"
-                        type="number"
-                        placeholder="0"
-                        value={totalPrice}
-                        onChange={(e) => { setTotalPrice(e.target.value); setErrors(prev => ({ ...prev, total_price: '' })) }}
-                        className={`h-10 pl-10 ${errors.total_price ? 'border-rose-500 focus-visible:ring-rose-500/50' : ''}`}
-                      />
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="harga_kost" className="text-xs text-gray-500">Kost</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
+                          <Input
+                            id="harga_kost"
+                            type="number"
+                            placeholder="0"
+                            value={hargaKost}
+                            onChange={(e) => { setHargaKost(e.target.value); setErrors(prev => ({ ...prev, harga_kost: '' })) }}
+                            className={`h-10 pl-10 ${errors.harga_kost ? 'border-rose-500 focus-visible:ring-rose-500/50' : ''}`}
+                          />
+                        </div>
+                        {errors.harga_kost && <p className="text-xs text-rose-500">{errors.harga_kost}</p>}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="harga_wifi" className="text-xs text-gray-500">WiFi</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
+                          <Input
+                            id="harga_wifi"
+                            type="number"
+                            placeholder="0"
+                            value={hargaWifi}
+                            onChange={(e) => { setHargaWifi(e.target.value); setErrors(prev => ({ ...prev, harga_wifi: '' })) }}
+                            className={`h-10 pl-10 ${errors.harga_wifi ? 'border-rose-500 focus-visible:ring-rose-500/50' : ''}`}
+                          />
+                        </div>
+                        {errors.harga_wifi && <p className="text-xs text-rose-500">{errors.harga_wifi}</p>}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="harga_air" className="text-xs text-gray-500">Air</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
+                          <Input
+                            id="harga_air"
+                            type="number"
+                            placeholder="0"
+                            value={hargaAir}
+                            onChange={(e) => { setHargaAir(e.target.value); setErrors(prev => ({ ...prev, harga_air: '' })) }}
+                            className={`h-10 pl-10 ${errors.harga_air ? 'border-rose-500 focus-visible:ring-rose-500/50' : ''}`}
+                          />
+                        </div>
+                        {errors.harga_air && <p className="text-xs text-rose-500">{errors.harga_air}</p>}
+                      </div>
                     </div>
-                    {totalPrice && Number(totalPrice) > 0 && (
-                      <p className="text-xs text-gray-400">{formatPrice(Number(totalPrice))} / bulan</p>
+                    {hargaKost && hargaWifi && hargaAir && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Total: {formatPrice(Number(hargaKost) + Number(hargaWifi) + Number(hargaAir))} / bulan
+                      </p>
                     )}
-                    {errors.total_price && <p className="text-xs text-rose-500">{errors.total_price}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -237,11 +282,25 @@ export default function TambahHunian() {
                     <span className="text-gray-500">Status</span>
                     <span className={`font-medium ${status === 'Terisi' ? 'text-rose-600' : 'text-emerald-600'}`}>{status}</span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Harga</span>
-                    <span className="font-medium text-emerald-600">
-                      {totalPrice && Number(totalPrice) > 0 ? formatPrice(Number(totalPrice)) : '-'}
-                    </span>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">Kost</span>
+                      <span className="font-medium text-gray-900">{hargaKost ? formatPrice(Number(hargaKost)) : '-'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">WiFi</span>
+                      <span className="font-medium text-gray-900">{hargaWifi ? formatPrice(Number(hargaWifi)) : '-'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">Air</span>
+                      <span className="font-medium text-gray-900">{hargaAir ? formatPrice(Number(hargaAir)) : '-'}</span>
+                    </div>
+                    <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-sm">
+                      <span className="font-medium text-gray-700">Total</span>
+                      <span className="font-semibold text-emerald-600">
+                        {hargaKost && hargaWifi && hargaAir ? formatPrice(Number(hargaKost) + Number(hargaWifi) + Number(hargaAir)) : '-'}
+                      </span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
