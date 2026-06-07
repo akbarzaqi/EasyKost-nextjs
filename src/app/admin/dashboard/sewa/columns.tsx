@@ -1,4 +1,5 @@
 'use client'
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Pencil, X, Check, Eye, Calendar } from "lucide-react"
 
@@ -110,18 +111,37 @@ export const columns = [
         id: 'actions',
         header: 'Aksi',
         cell: ({ row }: any) => {
+            const router = useRouter()
             const sewa = row.original
             return (
                 <div className="flex items-center gap-2">
                     {sewa.status === 'aktif' && (
                         <>
-                            <Button size="sm" variant="outline" className="h-8 w-[105px] justify-center text-xs hover:bg-gray-100">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-[105px] justify-center text-xs hover:bg-gray-100"
+                                onClick={() => router.push(`/admin/dashboard/sewa/${sewa.id}/edit`)}
+                            >
                                 <Pencil className="h-3 w-3 mr-1" />
                                 {actionConfig.aktif.label.edit}
                             </Button>
-                            <Button size="sm" variant="destructive" className="h-8 w-[105px] justify-center text-xs">
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-8 w-[105px] justify-center text-xs"
+                            >
                                 <X className="h-3 w-3 mr-1" />
                                 {actionConfig.aktif.label.akhiri}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-[80px] justify-center text-xs hover:bg-gray-100"
+                                onClick={() => router.push(`/admin/dashboard/sewa/${sewa.id}`)}
+                            >
+                                <Eye className="h-3 w-3 mr-1" />
+                                Detail
                             </Button>
                         </>
                     )}
@@ -136,11 +156,25 @@ export const columns = [
                                 <X className="h-3 w-3 mr-1" />
                                 {actionConfig.menunggu.label.tolak}
                             </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-[80px] justify-center text-xs hover:bg-gray-100"
+                                onClick={() => router.push(`/admin/dashboard/sewa/${sewa.id}`)}
+                            >
+                                <Eye className="h-3 w-3 mr-1" />
+                                Detail
+                            </Button>
                         </>
                     )}
 
                     {sewa.status === 'berakhir' && (
-                        <Button size="sm" variant="outline" className="h-8 w-[105px] justify-center text-xs hover:bg-gray-100">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-[105px] justify-center text-xs hover:bg-gray-100"
+                            onClick={() => router.push(`/admin/dashboard/sewa/${sewa.id}`)}
+                        >
                             <Eye className="h-3 w-3 mr-1" />
                             {actionConfig.berakhir.label}
                         </Button>
