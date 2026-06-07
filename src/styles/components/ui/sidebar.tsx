@@ -180,7 +180,7 @@ function Sidebar({
 
   if (isMobile) {
     return (
-      <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props} suppressHydrationWarning>
+      <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
         <SheetContent
           dir={dir}
           data-sidebar="sidebar"
@@ -193,7 +193,6 @@ function Sidebar({
             } as React.CSSProperties
           }
           side={side}
-          suppressHydrationWarning
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Sidebar</SheetTitle>
