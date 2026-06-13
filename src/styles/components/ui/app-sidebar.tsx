@@ -20,8 +20,9 @@ import {
   SidebarMenuItem,
 } from "@/styles/components/ui/sidebar"
 import { cn } from "@/styles/lib/utils"
+import { GoVerified } from "react-icons/go"
 
-const menuItems = [
+const menuAdminItems = [
   { href: "/admin/dashboard", icon: GridIcon, label: "Dashboard" },
   { href: "/admin/dashboard/hunian", icon: HomeIcon, label: "Hunian" },
   { href: "/admin/dashboard/sewa", icon: FileTextIcon, label: "Sewa" },
@@ -30,8 +31,24 @@ const menuItems = [
   { href: "/admin/dashboard/pengguna", icon: UsersIcon, label: "Pengguna" },
 ]
 
+const menuUserItems = [
+  { href: "/users/dashboard", icon: GridIcon, label: "Dashboard" },
+  { href: "/users/dashboard/kamar-saya", icon: HomeIcon, label: "Kamar Saya" },
+  { href: "/users/dashboard/tagihan", icon: FileTextIcon, label: "Tagihan" },
+  { href: "/users/dashboard/status", icon: GoVerified, label: "Status" },
+]
+
+
 export function AppSidebar() {
   const pathname = usePathname()
+  
+  console.log("Current Pathname:", pathname) 
+
+  const isUserPage = pathname.startsWith("/users/")
+  const isAdminPage = pathname.startsWith("/admin/")
+  console.log("Is User Page:", isUserPage)
+  console.log("Is Admin Page:", isAdminPage)
+
 
   const isActive = (href: string) => {
     if (href === "/admin/dashboard") {
@@ -58,7 +75,41 @@ export function AppSidebar() {
       {/* Navigation Menu */}
       <SidebarContent className="bg-gray-50 px-3 py-5">
         <SidebarMenu className="gap-1">
-          {menuItems.map((item) => {
+          {isAdminPage && menuAdminItems.map((item) => {
+            const Icon = item.icon
+            const active = isActive(item.href)
+
+            return (
+              <SidebarMenuItem key={item.href}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "relative flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200",
+                    active
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:bg-white/50 hover:text-gray-900"
+                  )}
+                >
+                  {/* Left Indicator Bar */}
+                  {active && (
+                    <div className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-gray-900 transition-all" />
+                  )}
+
+                  {/* Icon */}
+                  <Icon
+                    className={cn(
+                      "h-5 w-5 transition-colors duration-200",
+                      active ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600"
+                    )}
+                  />
+
+                  {/* Label */}
+                  <span className="flex-1 truncate">{item.label}</span>
+                </Link>
+              </SidebarMenuItem>
+            )
+          })}
+          {isUserPage && menuUserItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
 
@@ -102,8 +153,8 @@ export function AppSidebar() {
           <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
             <div className="h-8 w-8 rounded-full bg-linear-to-br from-amber-400 to-orange-500" />
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium text-gray-900 truncate">Admin User</div>
-              <div className="text-xs text-gray-500 truncate">admin@kost.local</div>
+              <div className="text-xs font-medium text-gray-900 truncate">{isAdminPage ? "Admin User" : "Regular User"}</div>
+              <div className="text-xs text-gray-500 truncate">{isAdminPage ? "admin@kost.local" : "user@kost.local"}</div>
             </div>
           </div>
         </div>
