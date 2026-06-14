@@ -5,20 +5,24 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Download, CheckCircle2, XCircle, FileImage } from 'lucide-react'
 
+type PaymentStatus = "paid" | "verif" | "notpaid"
+
 type Pembayaran = {
   id: number
   nama: string
   kamar: string
   invoice: string
   total: number
+  status: PaymentStatus
   cover_image_url: string
 }
 
 const data: Pembayaran[] = [
-  { id: 1, nama: 'John Doe', kamar: 'A101', invoice: 'INV-001', total: 1500000, cover_image_url: 'https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/af3236d32d89bc8bfca86c80aa9f7e2ba2dbe654.jpg' },
-  { id: 2, nama: 'Jane Smith', kamar: 'B202', invoice: 'INV-002', total: 2000000, cover_image_url: 'https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/af3236d32d89bc8bfca86c80aa9f7e2ba2dbe654.jpg' },
-  { id: 3, nama: 'Michael Johnson', kamar: 'C303', invoice: 'INV-003', total: 2500000, cover_image_url: 'https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/af3236d32d89bc8bfca86c80aa9f7e2ba2dbe654.jpg' },
-  { id: 4, nama: 'Emily Davis', kamar: 'D404', invoice: 'INV-004', total: 3000000, cover_image_url: 'https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/af3236d32d89bc8bfca86c80aa9f7e2ba2dbe654.jpg' },
+  { id: 1, nama: 'Akbar Zaki', kamar: 'A101', invoice: 'INV-2023-001', total: 2500000, status: 'paid', cover_image_url: 'https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/af3236d32d89bc8bfca86c80aa9f7e2ba2dbe654.jpg' },
+  { id: 2, nama: 'Siti Aminah', kamar: 'B202', invoice: 'INV-2023-002', total: 1800000, status: 'verif', cover_image_url: 'https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/af3236d32d89bc8bfca86c80aa9f7e2ba2dbe654.jpg' },
+  { id: 3, nama: 'Budi Santoso', kamar: 'C303', invoice: 'INV-2023-003', total: 3200000, status: 'notpaid', cover_image_url: 'https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/af3236d32d89bc8bfca86c80aa9f7e2ba2dbe654.jpg' },
+  { id: 4, nama: 'Dewi Lestari', kamar: 'D404', invoice: 'INV-2023-004', total: 2500000, status: 'paid', cover_image_url: 'https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/af3236d32d89bc8bfca86c80aa9f7e2ba2dbe654.jpg' },
+  { id: 5, nama: 'Rizky Pratama', kamar: 'E505', invoice: 'INV-2023-005', total: 2500000, status: 'paid', cover_image_url: 'https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/af3236d32d89bc8bfca86c80aa9f7e2ba2dbe654.jpg' },
 ]
 
 const fetchData = async (): Promise<Pembayaran[]> => {
@@ -113,6 +117,21 @@ export default function LihatBuktiClient({ id }: { id: string }) {
                   <span className="text-gray-500">Invoice</span>
                   <span className="font-mono font-semibold text-gray-900">#{pembayaran.invoice}</span>
                 </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Status</span>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                    pembayaran.status === 'paid' ? 'bg-emerald-50 text-emerald-700' :
+                    pembayaran.status === 'verif' ? 'bg-blue-50 text-blue-700' :
+                    'bg-rose-50 text-rose-700'
+                  }`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${
+                      pembayaran.status === 'paid' ? 'bg-emerald-500' :
+                      pembayaran.status === 'verif' ? 'bg-blue-500' :
+                      'bg-rose-500'
+                    }`} />
+                    {pembayaran.status === 'paid' ? 'Lunas' : pembayaran.status === 'verif' ? 'Verifikasi' : 'Belum Bayar'}
+                  </span>
+                </div>
                 <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">Total</span>
                   <span className="text-xl font-bold text-emerald-600">
@@ -122,19 +141,31 @@ export default function LihatBuktiClient({ id }: { id: string }) {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white border border-gray-200 shadow-lg p-5">
-              <h2 className="text-sm font-semibold text-gray-900 mb-4">Aksi Verifikasi</h2>
-              <div className="space-y-3">
-                <button className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Verifikasi Pembayaran
-                </button>
-                <button className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white text-gray-700 text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm">
-                  <XCircle className="h-4 w-4" />
-                  Tolak Pembayaran
-                </button>
+            {pembayaran.status !== 'paid' && (
+              <div className="rounded-2xl bg-white border border-gray-200 shadow-lg p-5">
+                <h2 className="text-sm font-semibold text-gray-900 mb-4">Aksi Verifikasi</h2>
+                <div className="space-y-3">
+                  <button className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Verifikasi Pembayaran
+                  </button>
+                  <button className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white text-gray-700 text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm">
+                    <XCircle className="h-4 w-4" />
+                    Tolak Pembayaran
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+            {pembayaran.status === 'paid' && (
+              <div className="rounded-2xl bg-white border border-gray-200 shadow-lg p-5">
+                <div className="flex flex-col items-center gap-3 py-2">
+                  <div className="p-3 bg-emerald-50 rounded-full">
+                    <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                  </div>
+                  <p className="text-sm font-semibold text-emerald-700">Pembayaran telah diverifikasi</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

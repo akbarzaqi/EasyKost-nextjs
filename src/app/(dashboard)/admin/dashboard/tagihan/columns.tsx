@@ -1,7 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import { Pencil, CheckCircle2, XCircle } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 
 type Tagihan = {
     id: string,
@@ -136,7 +136,6 @@ export const columns = [
         cell: ({ row }: any) => {
             const router = useRouter()
             const tagihan = row.original
-            const status = tagihan.status
             return (
                 <div className="flex items-center gap-2">
                     <Button
@@ -148,24 +147,10 @@ export const columns = [
                         <Pencil className="h-3 w-3 mr-1" />
                         Edit
                     </Button>
-                    {status === 'verifikasi' && (
-                        <>
-                            <Button size="sm" className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                <CheckCircle2 className="h-3 w-3 mr-1" />
-                                Verifikasi
-                            </Button>
-                            <Button size="sm" variant="destructive" className="h-8 px-3 text-xs">
-                                <XCircle className="h-3 w-3 mr-1" />
-                                Tolak
-                            </Button>
-                        </>
-                    )}
-                    {status === 'belum_bayar' && (
-                        <Button size="sm" variant="destructive" className="h-8 px-3 text-xs">
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Tolak
-                        </Button>
-                    )}
+                    <Button size="sm" variant="destructive" className="h-8 px-3 text-xs">
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Hapus
+                    </Button>
                 </div>
             )
         }
@@ -178,7 +163,7 @@ export const data: Tagihan[] = [
         invoiceNumber: 'INV-001',
         nama_penghuni: 'Akbar Zaki',
         kamar: 'Kamar 101',
-        rincian: ['Kost', 'Listrik', 'Air'],
+        rincian: ['Kost', 'WiFi', 'Sampah', 'Air'],
         total: 500000,
         jatuh_tempo: '2024-07-10',
         status: 'belum_bayar',
@@ -188,7 +173,7 @@ export const data: Tagihan[] = [
         invoiceNumber: 'INV-002',
         nama_penghuni: 'Siti Aminah',
         kamar: 'Kamar 102',
-        rincian: ['Kost', 'Listrik', 'Air'],
+        rincian: ['Kost', 'WiFi', 'Sampah', 'Air'],
         total: 500000,
         jatuh_tempo: '2024-07-10',
         status: 'lunas',
@@ -198,7 +183,7 @@ export const data: Tagihan[] = [
         invoiceNumber: 'INV-003',
         nama_penghuni: 'Budi Santoso',
         kamar: 'Kamar 103',
-        rincian: ['Kost', 'Listrik', 'Air'],
+        rincian: ['Kost', 'WiFi', 'Sampah', 'Air'],
         total: 500000,
         jatuh_tempo: '2024-07-10',
         status: 'verifikasi',

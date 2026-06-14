@@ -18,10 +18,16 @@ type Tagihan = {
   status: 'belum_bayar' | 'lunas' | 'verifikasi'
 }
 
+const staticBiaya = [
+  { name: 'Kost', value: 350000 },
+  { name: 'WiFi', value: 100000 },
+  { name: 'Sampah', value: 50000 },
+]
+
 const tagihanData: Tagihan[] = [
-  { id: '1', invoiceNumber: 'INV-001', nama_penghuni: 'Akbar Zaki', kamar: 'Kamar 101', rincian: [{ name: 'Kost', value: 350000 }, { name: 'Listrik', value: 100000 }, { name: 'Air', value: 50000 }], total: 500000, jatuh_tempo: '2024-07-10', status: 'belum_bayar' },
-  { id: '2', invoiceNumber: 'INV-002', nama_penghuni: 'Siti Aminah', kamar: 'Kamar 102', rincian: [{ name: 'Kost', value: 350000 }, { name: 'Listrik', value: 100000 }, { name: 'Air', value: 50000 }], total: 500000, jatuh_tempo: '2024-07-10', status: 'lunas' },
-  { id: '3', invoiceNumber: 'INV-003', nama_penghuni: 'Budi Santoso', kamar: 'Kamar 103', rincian: [{ name: 'Kost', value: 350000 }, { name: 'Listrik', value: 100000 }, { name: 'Air', value: 50000 }], total: 500000, jatuh_tempo: '2024-07-10', status: 'verifikasi' },
+  { id: '1', invoiceNumber: 'INV-001', nama_penghuni: 'Akbar Zaki', kamar: 'Kamar 101', rincian: staticBiaya, total: 500000, jatuh_tempo: '2024-07-10', status: 'belum_bayar' },
+  { id: '2', invoiceNumber: 'INV-002', nama_penghuni: 'Siti Aminah', kamar: 'Kamar 102', rincian: staticBiaya, total: 500000, jatuh_tempo: '2024-07-10', status: 'lunas' },
+  { id: '3', invoiceNumber: 'INV-003', nama_penghuni: 'Budi Santoso', kamar: 'Kamar 103', rincian: staticBiaya, total: 500000, jatuh_tempo: '2024-07-10', status: 'verifikasi' },
 ]
 
 const fetchTagihanData = async (): Promise<Tagihan[]> => {
@@ -52,7 +58,7 @@ export default function EditTagihanClient({ id }: { id: string }) {
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [namaPenghuni, setNamaPenghuni] = useState('')
   const [kamar, setKamar] = useState('')
-  const [rincian, setRincian] = useState<{ name: string; value: number }[]>([])
+  const [hargaAir, setHargaAir] = useState(0)
   const [jatuhTempo, setJatuhTempo] = useState('')
   const [status, setStatus] = useState<'belum_bayar' | 'lunas' | 'verifikasi'>('belum_bayar')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -65,7 +71,8 @@ export default function EditTagihanClient({ id }: { id: string }) {
         setInvoiceNumber(found.invoiceNumber)
         setNamaPenghuni(found.nama_penghuni)
         setKamar(found.kamar)
-        setRincian(found.rincian.map(r => ({ ...r })))
+        const airItem = found.rincian.find(r => r.name.toLowerCase() === 'air')
+        setHargaAir(airItem?.value ?? 0)
         setJatuhTempo(found.jatuh_tempo)
         setStatus(found.status)
       } else {
@@ -76,13 +83,8 @@ export default function EditTagihanClient({ id }: { id: string }) {
     load()
   }, [id])
 
-  const updateRincianValue = (index: number, value: string) => {
-    const updated = [...rincian]
-    updated[index].value = Number(value) || 0
-    setRincian(updated)
-  }
-
-  const total = rincian.reduce((sum, item) => sum + item.value, 0)
+  const staticTotal = staticBiaya.reduce((sum, item) => sum + item.value, 0)
+  const total = staticTotal + hargaAir
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
@@ -98,12 +100,13 @@ export default function EditTagihanClient({ id }: { id: string }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
+    const updatedRincian = [...staticBiaya, { name: 'Air', value: hargaAir }]
     const updatedTagihan = {
       id,
       invoiceNumber,
       nama_penghuni: namaPenghuni,
       kamar,
-      rincian,
+      rincian: updatedRincian,
       total,
       jatuh_tempo: jatuhTempo,
       status,
@@ -235,20 +238,31 @@ export default function EditTagihanClient({ id }: { id: string }) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {rincian.map((item, index) => (
-                    <div key={index} className="flex items-center gap-3">
+                  {staticBiaya.map((item) => (
+                    <div key={item.name} className="flex items-center gap-3">
                       <span className="w-24 text-sm font-medium text-gray-700">{item.name}</span>
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
+                        <div className="h-10 pl-10 flex items-center text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-200">
+                          {item.value.toLocaleString('id-ID')}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="border-t border-gray-100 pt-3">
+                    <div className="flex items-center gap-3">
+                      <span className="w-24 text-sm font-medium text-gray-700">Air</span>
                       <div className="relative flex-1">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
                         <Input
                           type="number"
-                          value={item.value || ''}
-                          onChange={(e) => updateRincianValue(index, e.target.value)}
+                          value={hargaAir || ''}
+                          onChange={(e) => setHargaAir(Number(e.target.value) || 0)}
                           className="h-10 pl-10"
                         />
                       </div>
                     </div>
-                  ))}
+                  </div>
                   {errors.rincian && <p className="text-xs text-rose-500">{errors.rincian}</p>}
                 </CardContent>
               </Card>
@@ -305,7 +319,7 @@ export default function EditTagihanClient({ id }: { id: string }) {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">Rincian</span>
-                    <span className="font-medium text-gray-900">{rincian.length} item</span>
+                    <span className="font-medium text-gray-900">{staticBiaya.length + 1} item</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">Jatuh Tempo</span>

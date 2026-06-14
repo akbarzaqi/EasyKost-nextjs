@@ -2,7 +2,8 @@
 import React, { useEffect, useState, useMemo } from "react"
 import { DataTable } from "./data-table"
 import { columns, data } from "./columns"
-import { Search, FileText, CheckCircle2, Clock, AlertCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Search, FileText, CheckCircle2, Clock, AlertCircle, Plus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 
@@ -24,6 +25,7 @@ const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
 ]
 
 export default function TagihanPage() {
+    const router = useRouter()
     const [tableData, setTableData] = useState<{ columns: any[], data: any[] } | null>(null)
     const [activeTab, setActiveTab] = useState<TabKey>("all")
     const [searchQuery, setSearchQuery] = useState<string>("")
@@ -124,15 +126,24 @@ export default function TagihanPage() {
                         })}
                     </div>
 
-                    <div className="relative w-full md:w-72">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                            type="text"
-                            placeholder="Cari invoice, nama, kamar..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 bg-white"
-                        />
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="relative flex-1 md:w-72">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                                type="text"
+                                placeholder="Cari invoice, nama, kamar..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-10 bg-white"
+                            />
+                        </div>
+                        <button
+                            onClick={() => router.push('/admin/dashboard/tagihan/tambah')}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors shadow-sm whitespace-nowrap"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Tambah Tagihan
+                        </button>
                     </div>
                 </div>
 

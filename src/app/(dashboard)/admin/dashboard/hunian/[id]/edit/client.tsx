@@ -123,7 +123,7 @@ export default function EditHunianClient({ id }: { id: string }) {
     if (!type.trim()) newErrors.type = 'Tipe kamar wajib dipilih'
     if (!hargaKost || Number(hargaKost) < 0) newErrors.harga_kost = 'Harga kost harus diisi'
     if (!hargaWifi || Number(hargaWifi) < 0) newErrors.harga_wifi = 'Harga wifi harus diisi'
-    if (!hargaAir || Number(hargaAir) < 0) newErrors.harga_air = 'Harga air harus diisi'
+    if (!hargaAir || Number(hargaAir) < 0) newErrors.harga_air = 'Harga sampah harus diisi'
     if (!description.trim()) newErrors.description = 'Deskripsi wajib diisi'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -285,7 +285,7 @@ export default function EditHunianClient({ id }: { id: string }) {
                         {errors.harga_wifi && <p className="text-xs text-rose-500">{errors.harga_wifi}</p>}
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="harga_air" className="text-xs text-gray-500">Air</Label>
+                        <Label htmlFor="harga_air" className="text-xs text-gray-500">Sampah</Label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
                           <Input
@@ -395,7 +395,7 @@ export default function EditHunianClient({ id }: { id: string }) {
                       <span className="font-medium text-gray-900">{hargaWifi ? formatPrice(Number(hargaWifi)) : '-'}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Air</span>
+                      <span className="text-gray-500">Sampah</span>
                       <span className="font-medium text-gray-900">{hargaAir ? formatPrice(Number(hargaAir)) : '-'}</span>
                     </div>
                     <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-sm">

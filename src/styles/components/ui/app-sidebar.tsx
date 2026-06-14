@@ -51,10 +51,11 @@ export function AppSidebar() {
 
 
   const isActive = (href: string) => {
-    if (href === "/admin/dashboard") {
-      return pathname === "/admin/dashboard"
+    if (href === pathname) return true;
+    if (href === "/admin/dashboard" || href === "/users/dashboard") {
+      return false;
     }
-    return pathname.startsWith(href)
+    return pathname.startsWith(href);
   }
 
   return (

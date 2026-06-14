@@ -167,8 +167,8 @@ export default function HunianDetailClient({ id }: { id: string }) {
                   <span className="font-medium text-gray-900">{formatPrice(hunian.harga_wifi)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Air</span>
-                  <span className="font-medium text-gray-900">{formatPrice(hunian.harga_air)}</span>
+                    <span className="text-gray-500">Sampah</span>
+                    <span className="font-medium text-gray-900">{formatPrice(hunian.harga_air)}</span>
                 </div>
                 <div className="pt-1.5 border-t border-gray-100 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">Total</span>
