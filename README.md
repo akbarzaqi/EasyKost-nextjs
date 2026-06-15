@@ -1,8 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kost Pak Aji - Management System
 
-## Getting Started
+A full-featured boarding house (kost) management application built with Next.js 16 App Router. Provides dual interfaces for **admins** (property managers) and **tenants/users** (penghuni) to manage rooms, rental contracts, invoices, and payments.
 
-First, run the development server:
+## Fitur
+
+### Admin
+- **Dashboard** — Overview with stats cards (Total Hunian, Penghuni Aktif, Tagihan Bulan Ini, Menunggu Verifikasi)
+- **Manajemen Hunian** — CRUD rooms with card display, status filter, search, image upload
+- **Manajemen Sewa** — Data table of rental contracts with status tabs & search
+- **Manajemen Tagihan** — Create, edit, delete invoices per room
+- **Status Pembayaran** — View payment proofs, verify/approve/reject payments
+
+### User/Penghuni
+- **Dashboard** — Room info, billing summary, payment history, service status
+- **Kamar Saya** — Room detail with pricing breakdown and contract info
+- **Tagihan** — Invoice list with year filter, pay or view invoice, upload payment proof
+- **Status Pembayaran** — Payment status table with pagination
+
+## Teknologi
+
+| Teknologi | Versi |
+|---|---|
+| [Next.js](https://nextjs.org) (App Router) | 16.2.6 |
+| [React](https://react.dev) | 19.2.4 |
+| [TypeScript](https://www.typescriptlang.org) | ^5 |
+| [Tailwind CSS](https://tailwindcss.com) | ^4 |
+| [shadcn/ui](https://ui.shadcn.com) (radix-nova) | ^4.10.0 |
+| [TanStack Table](https://tanstack.com/table) | ^8.21.3 |
+| [Lucide React](https://lucide.dev) | ^1.17.0 |
+| [Radix UI](https://www.radix-ui.com) | ^1.4.3 |
+| [class-variance-authority](https://cva.style) | ^0.7.1 |
+| [React Compiler](https://react.dev/learn/react-compiler) | 1.0.0 |
+
+## Cara Setup
+
+### Prerequisites
+- Node.js 20+
+- npm / yarn / pnpm / bun
+
+### Instalasi
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd kost-fe
+
+# Install dependencies
+npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+### Menjalankan Development Server
 
 ```bash
 npm run dev
@@ -14,23 +67,38 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](http://localhost:3000) di browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build untuk Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Struktur Proyek
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/
+│   ├── (auth)/                   # Login & Register
+│   │   ├── login/page.tsx
+│   │   └── register/page.tsx
+│   ├── (dashboard)/
+│   │   ├── admin/dashboard/      # Admin pages
+│   │   │   ├── hunian/           # CRUD rooms
+│   │   │   ├── sewa/             # Rental contracts
+│   │   │   ├── tagihan/          # Invoices
+│   │   │   └── pembayaran/       # Payment verifications
+│   │   └── users/dashboard/      # User/tenant pages
+│   │       ├── kamar-saya/       # My room
+│   │       ├── tagihan/          # My invoices
+│   │       └── status/           # Payment status
+│   ├── layout.tsx                # Root layout
+│   ├── page.tsx                  # Landing page
+│   └── globals.css               # Global styles + Tailwind
+└── styles/
+    ├── components/ui/            # shadcn/ui components
+    ├── hooks/                    # Custom hooks
+    └── lib/                      # Utilities
+```
