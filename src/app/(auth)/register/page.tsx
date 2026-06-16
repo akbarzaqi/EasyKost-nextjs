@@ -1,3 +1,7 @@
+'use client'
+
+import React from "react"
+
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -9,8 +13,35 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { register } from "../../../lib/api/auth"
+
 
 export default function Register() {
+
+  const [nama, setNama] = React.useState('');
+  const [username, setUsername] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = React.useState('');
+  const [noHp, setNoHp] = React.useState('');
+
+  console.log('Register Data:', { nama, email, password, passwordConfirmation, noHp });
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const response = await register({ nama, email, password, password_confirmation: passwordConfirmation, no_hp: noHp });
+      console.log('Registration successful:', response);
+      
+      if(!response.success) {
+        console.error('Registration failed:', response.message);
+      }
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error during registration:', error);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-xl">
@@ -24,14 +55,16 @@ export default function Register() {
         </CardAction> */}
       </CardHeader>
       <CardContent>
-        <form>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
-              <Label htmlFor="fullname">Nama Lengkap</Label>
+              <Label htmlFor="nama">Nama</Label>
               <Input
-                id="fullname"
+                id="nama"
                 type="text"
-                placeholder="Masukkan nama lengkap"
+                value={nama}
+                onChange={(e) => setNama(e.target.value)}
+                placeholder="Masukkan nama anda"
                 required
               />
             </div>
@@ -41,6 +74,8 @@ export default function Register() {
                 <Input
                   id="username"
                   type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   placeholder="Masukkan Nama Pengguna"
                   required
                 />
@@ -50,6 +85,8 @@ export default function Register() {
                 <Input
                   id="email"
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Masukkan Email"
                   required
                 />
@@ -60,13 +97,25 @@ export default function Register() {
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="confirm_password">Konfirmasi Password</Label>
                 </div>
-                <Input id="confirm_password" type="password" required />
+                <Input
+                  id="confirm_password"
+                  type="password"
+                  value={passwordConfirmation}
+                  onChange={(e) => setPasswordConfirmation(e.target.value)}
+                  required
+                />
               </div>
             </div>
 
@@ -75,24 +124,28 @@ export default function Register() {
               <Input
                 id="no_hp"
                 type="text"
+                value={noHp}
+                onChange={(e) => setNoHp(e.target.value)}
                 placeholder="Masukkan Nomor Telepon"
                 required
               />
             </div>
+
+            <div className="flex-col gap-2">
+              <Button type="submit" className="w-full pt-4 pb-4" onClick={handleSubmit}>
+                Register
+              </Button>
+              <p className="text-sm text-muted-foreground mt-5">
+                Sudah punya akun?{' '}
+                <a href="/login" className="underline-offset-4 hover:underline text-black font-medium">
+                  Login
+                </a>
+              </p>
+            </div>
           </div>
+       
         </form>
       </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <Button type="submit" className="w-full pt-4 pb-4">
-          Register
-        </Button>
-        <p className="text-sm text-muted-foreground mt-5">
-          Sudah punya akun?{' '}
-          <a href="#" className="underline-offset-4 hover:underline text-black font-medium">
-            Login
-          </a>
-        </p>
-      </CardFooter>
       </Card>
     </div>
   )
