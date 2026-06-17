@@ -25,18 +25,18 @@ export default function Register() {
   const [passwordConfirmation, setPasswordConfirmation] = React.useState('');
   const [noHp, setNoHp] = React.useState('');
 
-  console.log('Register Data:', { nama, email, password, passwordConfirmation, noHp });
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log('Register Data:', { nama, username, email, password, passwordConfirmation, noHp });
+
     try {
-      const response = await register({ nama, email, password, password_confirmation: passwordConfirmation, no_hp: noHp });
+      const response = await register({ nama, username, email, password, password_confirmation: passwordConfirmation, no_hp: noHp });
       console.log('Registration successful:', response);
       
-      if(!response.success) {
+      if(!response) {
         console.error('Registration failed:', response.message);
       }
-      window.location.href = '/login';
+      // window.location.href = '/login';
     } catch (error) {
       console.error('Error during registration:', error);
     }
@@ -132,7 +132,7 @@ export default function Register() {
             </div>
 
             <div className="flex-col gap-2">
-              <Button type="submit" className="w-full pt-4 pb-4" onClick={handleSubmit}>
+              <Button type="submit" className="w-full pt-4 pb-4">
                 Register
               </Button>
               <p className="text-sm text-muted-foreground mt-5">

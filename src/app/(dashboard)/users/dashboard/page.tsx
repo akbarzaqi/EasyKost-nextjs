@@ -4,8 +4,14 @@ import { Home, Wifi, Bolt, Droplet, CheckCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/styles/components/ui/card";
 import { Button } from "@/styles/components/ui/button";
 import { Badge } from "@/styles/components/ui/badge";
+import { useAuth } from "../../../../lib/hooks/useAuth";
 
 export default function Dashboard() {
+
+  const { user } = useAuth();
+  
+  console.log('Authenticated user in Dashboard:', user);
+
   return (
     <div className="min-h-screen bg-[#F7F7F7] p-6 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">

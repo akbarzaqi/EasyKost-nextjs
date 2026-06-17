@@ -16,6 +16,8 @@ import { Plus, FileText, TrendingUp } from "lucide-react"
 import { columns, data } from "./columns"
 import { DataTable } from "./data-table"
 
+import { useAuth } from "../../../../lib/hooks/useAuth"
+
 const getData = async (): Promise<{ columns: any[], data: any[] }> => {
     return new Promise((resolve) => {
         setTimeout(() => {
@@ -42,6 +44,10 @@ type Stat = {
 export default function AdminDashboard() {
     const [columnsList, setColumnsList] = React.useState<any[] | null>(null)
     const [dataList, setDataList] = React.useState<any[] | null>(null)
+
+    const { user } = useAuth()
+
+    console.log('Authenticated user in AdminDashboard:', user)
 
     useEffect(() => {
         const fetchData = async () => {

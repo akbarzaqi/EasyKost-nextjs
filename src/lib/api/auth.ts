@@ -1,4 +1,12 @@
-const API_URL = process.env.API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const setLocalStorageItem = (key: string, value: string) => {
+    try {
+        localStorage.setItem(key, value);
+    } catch (error) {
+        console.error(`Error setting localStorage item ${key}:`, error);
+    }
+}
 
 const fetchWithAccessToken = async (url: string, options: RequestInit = {}) => {
     const accessToken = localStorage.getItem('access_token');
@@ -12,28 +20,57 @@ const fetchWithAccessToken = async (url: string, options: RequestInit = {}) => {
     };
 
     const response = await fetch(`${API_URL}${url}`, { ...options, headers });
+
+    const data = await response.json();
+
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.error('API Error:', data);
+        
     }
-    return response.json();
+
+    return data;
 }
 
 const fetchWithoutAccessToken = async (url: string, options: RequestInit = {}) => {
-    const response = await fetch(`${API_URL}${url}`, options);
+    const response = await fetch(`${API_URL}${url}`, {
+        ...options,
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            ...options.headers,
+        },
+    });
+
+    const data = await response.json();
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.error('API Error:', data);
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
-    return response.json();
+    return data;
 }
 
-const register = async (data: { nama : string; email: string; password: string; password_confirmation: string; no_hp: string }) => {
+
+const register = async (data: { nama : string; username: string; email: string; password: string; password_confirmation: string; no_hp: string }) => {
+    console.log('[api/auth] Registering user with data:', data);
     return await fetchWithoutAccessToken('/register', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         body: JSON.stringify(data),
     });
 }
+
+const login = async (data: { username: string; password: string }) => {
+    console.log('[api/auth] Logging in user with data:', data);
     
-export { fetchWithAccessToken, fetchWithoutAccessToken, register };
+    const response = await fetchWithoutAccessToken('/login', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    });
+    
+    if(response) {
+        return {error: false, data: response};
+    } else {
+        return {error: true, data: null};
+    }
+}
+    
+export { fetchWithAccessToken, fetchWithoutAccessToken, register, login, setLocalStorageItem };
