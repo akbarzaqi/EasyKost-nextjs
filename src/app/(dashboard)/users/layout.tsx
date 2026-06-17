@@ -8,7 +8,9 @@ import {
 import { AppSidebar } from "@/styles/components/ui/app-sidebar"
 import { Plus, Bell, Settings } from "lucide-react"
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useAuth } from "../../../lib/hooks/useAuth"
+import { useEffect } from "react"
 
 
 export default function AdminLayout({
@@ -17,6 +19,8 @@ export default function AdminLayout({
   children: React.ReactNode
 }>) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, isLoading } = useAuth()
 
   const getTitleFromPath = (path: string) => {
     const pathMap: Record<string, string> = {
@@ -30,6 +34,18 @@ export default function AdminLayout({
     return pathMap[path] || "Dashboard"
   }
 
+  useEffect(() => {
+    if (isLoading) return
+
+    if (!user) {
+      router.push('/login')
+    } else if(user.role !== 'user') {
+      router.push('/admin/dashboard')
+    }
+  }, [user, isLoading, router])
+
+  if (isLoading) return null
+  if (!user || user.role !== 'user') return null
   return (
     <SidebarProvider>
       <AppSidebar />

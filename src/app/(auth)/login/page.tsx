@@ -12,15 +12,17 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import React from "react"
-import { login, setLocalStorageItem } from "../../../lib/api/auth"
+import { login } from "../../../lib/api/auth"
 import { useAuth } from "../../../lib/hooks/useAuth"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function Login() {
 
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [errorMsg, setErrorMsg] = React.useState('');
 
   const { user, isLoading, loginUser } = useAuth();
   const router = useRouter();
@@ -40,28 +42,19 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Implement login logic here, e.g., call the login API
-    console.log('Logging in with:', { username, password });
+    setErrorMsg('');
 
     try {
-
       const response = await login({ username, password });
-      console.log('Login successful:', response);
 
       if (response.error) {
-        console.error('Login failed:', response.data.message);
+        setErrorMsg(response.message || 'Login gagal, coba lagi');
         return;
       }
 
       loginUser(response.data.token, response.data.user);
-
-      setLocalStorageItem('token', response.data.token);
-      setLocalStorageItem('user', JSON.stringify(response.data.user));
-
-
     } catch (error) {
-      console.error('Login failed:', error);
-      // Handle login failure, e.g., show err or message
+      setErrorMsg('Terjadi kesalahan, coba lagi nanti');
     }
   }
   if(!isLoading && !user) {
@@ -104,14 +97,17 @@ export default function Login() {
                 />
               </div>
               <div className="grid gap-2">
+                {errorMsg && (
+                  <p className="text-sm text-red-500 text-center">{errorMsg}</p>
+                )}
                 <Button type="submit" className="w-full pt-4 pb-4">
                   Login
                 </Button>
                 <p className="text-sm text-muted-foreground text-center mt-5">
                   Belum punya akun?{' '}
-                  <a href="#" className="underline-offset-4 hover:underline text-black font-medium">
+                  <Link href="/register" className="underline-offset-4 hover:underline text-black font-medium">
                     Daftar
-                  </a>
+                  </Link>
                 </p>
               </div>
             </div>

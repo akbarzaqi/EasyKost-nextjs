@@ -9,7 +9,7 @@ const setLocalStorageItem = (key: string, value: string) => {
 }
 
 const fetchWithAccessToken = async (url: string, options: RequestInit = {}) => {
-    const accessToken = localStorage.getItem('access_token');
+    const accessToken = localStorage.getItem('token');
     if (!accessToken) {
         throw new Error('No access token found');
     }
@@ -20,12 +20,10 @@ const fetchWithAccessToken = async (url: string, options: RequestInit = {}) => {
     };
 
     const response = await fetch(`${API_URL}${url}`, { ...options, headers });
-
     const data = await response.json();
 
     if (!response.ok) {
-        console.error('API Error:', data);
-        
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
 
     return data;
@@ -60,16 +58,16 @@ const register = async (data: { nama : string; username: string; email: string; 
 
 const login = async (data: { username: string; password: string }) => {
     console.log('[api/auth] Logging in user with data:', data);
-    
-    const response = await fetchWithoutAccessToken('/login', {
-        method: 'POST',
-        body: JSON.stringify(data),
-    });
-    
-    if(response) {
-        return {error: false, data: response};
-    } else {
-        return {error: true, data: null};
+
+    try {
+        const response = await fetchWithoutAccessToken('/login', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+        return { error: false, data: response, message: '' };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : 'Login gagal';
+        return { error: true, data: null, message };
     }
 }
     
