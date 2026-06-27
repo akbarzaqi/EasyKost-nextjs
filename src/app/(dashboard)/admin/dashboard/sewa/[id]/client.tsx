@@ -4,8 +4,12 @@ import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, User, Home, Calendar, Clock, FileText, Pencil, Wallet, CheckCircle2, XCircle, AlertCircle, Loader2, Phone, Mail, MapPin, Building2, Check, X, Briefcase } from 'lucide-react'
+import { ArrowLeft, User, Home, Calendar, Clock, FileText, Pencil, Wallet, CheckCircle2, XCircle, AlertCircle, Loader2, Phone, Mail, MapPin, Building2, Check, X, Briefcase, Receipt, Eye } from 'lucide-react'
 import { getSewaById, updateSewa } from '@/lib/api/sewa'
+import { getAllTagihan } from '@/lib/api/tagihan'
+
+const formatRupiah = (amount: number) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount)
 
 type SewaDetail = {
     id_sewa: number
@@ -48,17 +52,36 @@ const statusConfig: Record<string, { label: string; bg: string; text: string; bo
     pending: { label: 'Menunggu', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' },
 }
 
+const tagihanStatus: Record<string, { label: string; bg: string; text: string }> = {
+    notpaid: { label: 'Belum Bayar', bg: 'bg-red-50', text: 'text-red-700' },
+    verif: { label: 'Verifikasi', bg: 'bg-amber-50', text: 'text-amber-700' },
+    paid: { label: 'Lunas', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+}
+
+const hitungTotal = (t: any) => {
+    const biaya = t.sewa?.hunian?.biaya
+    return (biaya ? Number(biaya.kost) + Number(biaya.wifi) + Number(biaya.sampah) : 0) + (Number(t.air) || 0)
+}
+
 export default function SewaDetailClient({ id }: { id: string }) {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [actionLoading, setActionLoading] = useState<string | null>(null)
     const [sewa, setSewa] = useState<SewaDetail | null>(null)
+    const [tagihanList, setTagihanList] = useState<any[]>([])
 
     const fetchData = async () => {
         setLoading(true)
-        const response = await getSewaById(parseInt(id))
-        if (!response.error && response.data) {
-            setSewa(response.data)
+        const [sewaRes, tagihanRes] = await Promise.all([
+            getSewaById(parseInt(id)),
+            getAllTagihan(),
+        ])
+        if (!sewaRes.error && sewaRes.data) {
+            setSewa(sewaRes.data)
+            const filtered = (tagihanRes.data || []).filter(
+                (t: any) => t.id_sewa === sewaRes.data.id_sewa
+            )
+            setTagihanList(filtered)
         }
         setLoading(false)
     }
@@ -196,11 +219,7 @@ export default function SewaDetailClient({ id }: { id: string }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                    {user.foto ? (
-                                        <img src={user.foto} alt="" className="h-full w-full object-cover rounded-full" />
-                                    ) : (
-                                        <User className="h-5 w-5 text-gray-400" />
-                                    )}
+                                    <User className="h-5 w-5 text-gray-400" />
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-400">Nama</p>
@@ -248,7 +267,75 @@ export default function SewaDetailClient({ id }: { id: string }) {
                                 </p>
                             </div>
                         </div>
+                        {user.foto && (
+                            <div className="mt-6 pt-6 border-t border-gray-100">
+                                <p className="text-xs text-gray-400 mb-2">Foto KTP</p>
+                                <div className="flex items-start gap-4">
+                                    <img src={user.foto} alt="KTP" className="max-w-xs rounded-lg border border-gray-200" />
+                                    <a
+                                        href={user.foto}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                    >
+                                        <Eye className="h-3.5 w-3.5" />
+                                        Lihat KTP
+                                    </a>
+                                </div>
+                            </div>
+                        )}
                     </div>
+                </div>
+
+                {/* Riwayat Tagihan */}
+                <div className="mt-6 rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-indigo-50">
+                                <Receipt className="h-5 w-5 text-indigo-600" />
+                            </span>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900">Riwayat Tagihan</h2>
+                                <p className="text-sm text-gray-500">Daftar tagihan dan status pembayaran.</p>
+                            </div>
+                        </div>
+                    </div>
+                    {tagihanList.length === 0 ? (
+                        <div className="p-6 text-center text-sm text-gray-400">Belum ada tagihan.</div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-100 bg-gray-50/50">
+                                        <th className="text-left px-5 py-3 font-medium text-gray-500">Periode</th>
+                                        <th className="text-left px-5 py-3 font-medium text-gray-500">Tagihan</th>
+                                        <th className="text-left px-5 py-3 font-medium text-gray-500">Jatuh Tempo</th>
+                                        <th className="text-left px-5 py-3 font-medium text-gray-500">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {tagihanList.map((t: any) => {
+                                        const ts = tagihanStatus[t.status] || tagihanStatus.notpaid
+                                        const bulan = t.tgl_tagihan
+                                            ? new Date(t.tgl_tagihan).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+                                            : '-'
+                                        return (
+                                            <tr key={t.id_tagihan} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                                <td className="px-5 py-4 text-gray-900 font-medium">{bulan}</td>
+                                                <td className="px-5 py-4 text-gray-900">{formatRupiah(hitungTotal(t))}</td>
+                                                <td className="px-5 py-4 text-gray-600">{formatDate(t.tgl_jatuhtempo)}</td>
+                                                <td className="px-5 py-4">
+                                                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${ts.bg} ${ts.text}`}>
+                                                        {ts.label}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
 
                 {/* Actions */}
