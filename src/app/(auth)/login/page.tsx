@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
 import React, { Suspense } from "react"
 import { login } from "../../../lib/api/auth"
 import { useAuth } from "../../../lib/hooks/useAuth"
@@ -21,6 +22,7 @@ function LoginForm() {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [errorMsg, setErrorMsg] = React.useState('');
+  const [successMsg, setSuccessMsg] = React.useState('');
 
   const { user, isLoading, loginUser } = useAuth();
   const router = useRouter();
@@ -98,7 +100,16 @@ function LoginForm() {
               </div>
               <div className="grid gap-2">
                 {errorMsg && (
-                  <p className="text-sm text-red-500 text-center">{errorMsg}</p>
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-red-50 border border-red-200">
+                    <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-red-700">{errorMsg}</div>
+                  </div>
+                )}
+                {successMsg && (
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-emerald-700">{successMsg}</div>
+                  </div>
                 )}
                 <Button type="submit" className="w-full pt-4 pb-4">
                   Login

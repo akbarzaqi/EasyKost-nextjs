@@ -1,18 +1,19 @@
 'use client'
 
 import React from "react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { register } from "../../../lib/api/auth"
 
 
@@ -24,21 +25,22 @@ export default function Register() {
   const [password, setPassword] = React.useState('');
   const [passwordConfirmation, setPasswordConfirmation] = React.useState('');
   const [noHp, setNoHp] = React.useState('');
+  const [errorMsg, setErrorMsg] = React.useState('');
+  const [successMsg, setSuccessMsg] = React.useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Register Data:', { nama, username, email, password, passwordConfirmation, noHp });
+    setErrorMsg('');
+    setSuccessMsg('');
 
     try {
-      const response = await register({ nama, username, email, password, password_confirmation: passwordConfirmation, no_hp: noHp });
-      console.log('Registration successful:', response);
-      
-      if(!response) {
-        console.error('Registration failed:', response.message);
-      }
-      // window.location.href = '/login';
+      await register({ nama, username, email, password, password_confirmation: passwordConfirmation, no_hp: noHp });
+      setSuccessMsg('Akun berhasil dibuat! Mengalihkan ke halaman login...');
+      setTimeout(() => router.push('/login'), 1500);
     } catch (error) {
-      console.error('Error during registration:', error);
+      const message = error instanceof Error ? error.message : 'Gagal mendaftar';
+      setErrorMsg(message);
     }
   }
 
@@ -50,13 +52,22 @@ export default function Register() {
         <CardDescription className="mb-4">
             Kelola hunian anda dengan lebih mudah di Kost Pak Aji
         </CardDescription>
-        {/* <CardAction>
-          <Button variant="link">Sign Up</Button>
-        </CardAction> */}
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} autoComplete="off">
           <div className="flex flex-col gap-6">
+            {errorMsg && (
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-red-50 border border-red-200">
+                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-red-700">{errorMsg}</div>
+              </div>
+            )}
+            {successMsg && (
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
+                <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-emerald-700">{successMsg}</div>
+              </div>
+            )}
             <div className="grid gap-2">
               <Label htmlFor="nama">Nama</Label>
               <Input
@@ -135,7 +146,7 @@ export default function Register() {
               <Button type="submit" className="w-full pt-4 pb-4">
                 Register
               </Button>
-              <p className="text-sm text-muted-foreground mt-5">
+              <p className="text-sm text-muted-foreground mt-5 text-center">
                 Sudah punya akun?{' '}
                 <a href="/login" className="underline-offset-4 hover:underline text-black font-medium">
                   Login
