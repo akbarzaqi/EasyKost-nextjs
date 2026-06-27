@@ -70,9 +70,6 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-lg bg-gray-900 flex items-center justify-center">
-                                <Home className="h-4 w-4 text-white" />
-                            </div>
                             <span className="font-bold text-gray-900">Kost Pak Aji</span>
                         </div>
                         <div className="flex items-center gap-3">
@@ -237,15 +234,7 @@ export default function HomePage() {
             {/* Footer */}
             <footer className="border-t border-gray-100 bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded bg-gray-900 flex items-center justify-center">
-                                <Home className="h-3 w-3 text-white" />
-                            </div>
-                            <span className="text-sm font-semibold text-gray-900">Kost Pak Aji</span>
-                        </div>
-                        <p className="text-xs text-gray-400">&copy; 2026 Kost Pak Aji. All rights reserved.</p>
-                    </div>
+                    <p className="text-xs text-gray-400 text-center">&copy; 2026 Kost Pak Aji. All rights reserved.</p>
                 </div>
             </footer>
         </div>

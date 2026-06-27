@@ -109,9 +109,6 @@ export default function DetailHunianPage() {
                             </button>
                             <div className="h-6 w-px bg-gray-200" />
                             <div className="flex items-center gap-2">
-                                <div className="h-7 w-7 rounded-lg bg-gray-900 flex items-center justify-center">
-                                    <Home className="h-3.5 w-3.5 text-white" />
-                                </div>
                                 <span className="font-semibold text-gray-900">Kost Pak Aji</span>
                             </div>
                         </div>
