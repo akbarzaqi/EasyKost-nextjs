@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -10,76 +10,34 @@ import {
   ChevronDown,
   CheckCircle2,
   Clock,
+  Loader2,
+  Home,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/styles/components/ui/card";
 import { Button } from "@/styles/components/ui/button";
 import { Badge } from "@/styles/components/ui/badge";
+import { getMyTagihan } from "@/lib/api/tagihan";
 
-interface InvoiceItem {
-  label: string;
-  amount: string;
-}
+const formatRupiah = (amount: number) => `Rp ${amount.toLocaleString('id-ID')}`;
 
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  month: string;
-  year: number;
-  status: "unpaid" | "paid";
-  dueDate?: string;
-  paidDate?: string;
-  items: InvoiceItem[];
-  total: string;
-}
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+};
 
-const invoices: Invoice[] = [
-  {
-    id: "oct-2024",
-    invoiceNumber: "INV-202310882",
-    month: "Oktober",
-    year: 2024,
-    status: "unpaid",
-    dueDate: "10 Okt 2024",
-    items: [
-      { label: "Biaya Kost", amount: "Rp 2.000.000" },
-      { label: "Listrik (Token)", amount: "Rp 350.000" },
-      { label: "Air & Kebersihan", amount: "Rp 100.000" },
-    ],
-    total: "Rp 2.450.000",
-  },
-  {
-    id: "sep-2024",
-    invoiceNumber: "INV-202309764",
-    month: "September",
-    year: 2024,
-    status: "paid",
-    paidDate: "02 Sep 2024",
-    items: [
-      { label: "Biaya Kost", amount: "Rp 2.000.000" },
-      { label: "Listrik (Token)", amount: "Rp 280.000" },
-      { label: "Air & Kebersihan", amount: "Rp 100.000" },
-    ],
-    total: "Rp 2.380.000",
-  },
-  {
-    id: "aug-2024",
-    invoiceNumber: "INV-202308651",
-    month: "Agustus",
-    year: 2024,
-    status: "paid",
-    paidDate: "05 Ags 2024",
-    items: [
-      { label: "Biaya Kost", amount: "Rp 2.000.000" },
-      { label: "Listrik (Token)", amount: "Rp 410.000" },
-      { label: "Air & Kebersihan", amount: "Rp 100.000" },
-    ],
-    total: "Rp 2.510.000",
-  },
-];
+function InvoiceCard({ tagihan, onBayar, onLihat }: { tagihan: any; onBayar: (id: number) => void; onLihat: (id: number) => void }) {
+  const biaya = tagihan.sewa?.hunian?.biaya;
+  const biayaKost = biaya ? Number(biaya.kost) : 0;
+  const biayaWifi = biaya ? Number(biaya.wifi) : 0;
+  const biayaSampah = biaya ? Number(biaya.sampah) : 0;
+  const biayaAir = Number(tagihan.air) || 0;
+  const total = biayaKost + biayaWifi + biayaSampah + biayaAir;
+  const isUnpaid = tagihan.status === "notpaid";
 
-function InvoiceCard({ invoice }: { invoice: Invoice }) {
-  const router = useRouter();
-  const isUnpaid = invoice.status === "unpaid";
+  const bulan = new Date(tagihan.tgl_tagihan).toLocaleDateString('id-ID', {
+    month: 'long', year: 'numeric'
+  });
 
   return (
     <Card
@@ -100,10 +58,13 @@ function InvoiceCard({ invoice }: { invoice: Invoice }) {
         <div className="flex items-start justify-between gap-4">
           <div>
             <CardTitle className="text-lg font-semibold text-gray-900">
-              {invoice.month} {invoice.year}
+              {bulan}
             </CardTitle>
             <p className="text-sm text-gray-500 mt-1">
-              {isUnpaid ? `Jatuh tempo: ${invoice.dueDate}` : `Dibayar: ${invoice.paidDate}`}
+              {isUnpaid
+                ? `Jatuh tempo: ${formatDate(tagihan.tgl_jatuhtempo)}`
+                : `Dibayar: ${tagihan.transaksi ? formatDate(tagihan.transaksi.created_at) : '-'}`
+              }
             </p>
           </div>
           <Badge
@@ -126,18 +87,28 @@ function InvoiceCard({ invoice }: { invoice: Invoice }) {
 
       <CardContent className="relative z-10 pt-4 space-y-4">
         <div className="space-y-3">
-          {invoice.items.map((item, index) => (
-            <div key={index} className="flex justify-between text-sm">
-              <span className="text-gray-600">{item.label}</span>
-              <span className="font-medium text-gray-900">{item.amount}</span>
-            </div>
-          ))}
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Biaya Kost</span>
+            <span className="font-medium text-gray-900">{formatRupiah(biayaKost)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">WiFi</span>
+            <span className="font-medium text-gray-900">{formatRupiah(biayaWifi)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Air</span>
+            <span className="font-medium text-gray-900">{formatRupiah(biayaAir)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Kebersihan/Sampah</span>
+            <span className="font-medium text-gray-900">{formatRupiah(biayaSampah)}</span>
+          </div>
         </div>
 
         <div className="border-t border-gray-100 pt-4">
           <div className="flex justify-between text-base">
             <span className="text-gray-500">Total Tagihan</span>
-            <span className="font-bold text-gray-900">{invoice.total}</span>
+            <span className="font-bold text-gray-900">{formatRupiah(total)}</span>
           </div>
         </div>
       </CardContent>
@@ -145,7 +116,7 @@ function InvoiceCard({ invoice }: { invoice: Invoice }) {
       <CardFooter className="relative z-10 pt-4 border-t border-gray-100">
         {isUnpaid ? (
           <Button
-            onClick={() => router.push(`/users/dashboard/tagihan/invoices/${invoice.invoiceNumber}/bayar`)}
+            onClick={() => onBayar(tagihan.id_tagihan)}
             className="w-full bg-black text-white hover:bg-gray-900 font-medium py-3 gap-2 cursor-pointer"
           >
             <CreditCard className="h-4 w-4" aria-hidden="true" />
@@ -153,8 +124,8 @@ function InvoiceCard({ invoice }: { invoice: Invoice }) {
           </Button>
         ) : (
           <Button
-            onClick={() => router.push(`/users/dashboard/tagihan/invoices/${invoice.invoiceNumber}`)}
             variant="outline"
+            onClick={() => onLihat(tagihan.id_tagihan)}
             className="w-full border-gray-900 text-gray-900 hover:bg-gray-50 font-medium py-3 gap-2 cursor-pointer"
           >
             <FileText className="h-4 w-4" aria-hidden="true" />
@@ -166,9 +137,7 @@ function InvoiceCard({ invoice }: { invoice: Invoice }) {
   );
 }
 
-const availableYears = [...new Set(invoices.map((inv) => inv.year))].sort((a, b) => b - a);
-
-function TahunSelect({ selected, onChange }: { selected: number; onChange: (year: number) => void }) {
+function TahunSelect({ availableYears, selected, onChange }: { availableYears: number[]; selected: number; onChange: (year: number) => void }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -205,16 +174,86 @@ function TahunSelect({ selected, onChange }: { selected: number; onChange: (year
 }
 
 export default function TagihanPage() {
-  const defaultYear = availableYears[0] ?? new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState(defaultYear);
-  const filteredInvoices = invoices.filter((inv) => inv.year === selectedYear);
+  const router = useRouter();
+  const [tagihanList, setTagihanList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [allYears, setAllYears] = useState<number[]>([]);
 
-  const totalSemua = invoices.reduce((sum, inv) => {
-    const num = parseInt(inv.total.replace(/\D/g, "")) || 0;
-    return sum + num;
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getMyTagihan();
+      if (!response.error && response.data) {
+        const list = response.data;
+        setTagihanList(list);
+        const years = ([...new Set(list.map((t: any) => new Date(t.tgl_tagihan).getFullYear()))] as number[]).sort((a, b) => b - a);
+        setAllYears(years);
+        if (years.length > 0) setSelectedYear(years[0]);
+      }
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  const filtered = tagihanList.filter((t) => {
+    const year = new Date(t.tgl_tagihan).getFullYear();
+    return year === selectedYear;
+  });
+
+  const totalSemua = tagihanList.reduce((sum, t) => {
+    const biaya = t.sewa?.hunian?.biaya;
+    const biayaKost = biaya ? Number(biaya.kost) : 0;
+    const biayaWifi = biaya ? Number(biaya.wifi) : 0;
+    const biayaSampah = biaya ? Number(biaya.sampah) : 0;
+    const biayaAir = Number(t.air) || 0;
+    return sum + biayaKost + biayaWifi + biayaSampah + biayaAir;
   }, 0);
-  const totalLunas = invoices.filter((inv) => inv.status === "paid").length;
-  const totalBelum = invoices.filter((inv) => inv.status === "unpaid").length;
+
+  const totalLunas = tagihanList.filter((t) => t.status === "paid").length;
+  const totalBelum = tagihanList.filter((t) => t.status === "notpaid").length;
+
+  const totalBelumNominal = tagihanList
+    .filter((t) => t.status === "notpaid")
+    .reduce((sum, t) => {
+      const biaya = t.sewa?.hunian?.biaya;
+      const biayaKost = biaya ? Number(biaya.kost) : 0;
+      const biayaWifi = biaya ? Number(biaya.wifi) : 0;
+      const biayaSampah = biaya ? Number(biaya.sampah) : 0;
+      const biayaAir = Number(t.air) || 0;
+      return sum + biayaKost + biayaWifi + biayaSampah + biayaAir;
+    }, 0);
+
+  const handleBayar = (id: number) => {
+    router.push(`/users/dashboard/tagihan/invoices/${id}/bayar`);
+  };
+
+  const handleLihat = (id: number) => {
+    router.push(`/users/dashboard/tagihan/invoices/${id}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F7] flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (tagihanList.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F7] p-6 md:p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <Home className="h-8 w-8 text-gray-300" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900">Belum Ada Tagihan</h2>
+          <p className="text-gray-500 mt-2">Belum ada tagihan yang tersedia untuk Anda.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const bulanMendatang = tagihanList.find((t) => t.status === "notpaid");
 
   return (
     <div className="min-h-screen bg-[#F7F7F7] p-6 md:p-8">
@@ -229,7 +268,9 @@ export default function TagihanPage() {
               Kelola pengeluaran hunian Anda dengan transparan.
             </p>
           </div>
-          <TahunSelect selected={selectedYear} onChange={setSelectedYear} />
+          {allYears.length > 0 && (
+            <TahunSelect availableYears={allYears} selected={selectedYear} onChange={setSelectedYear} />
+          )}
         </div>
 
         {/* Status Metrics */}
@@ -241,7 +282,7 @@ export default function TagihanPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Total Tagihan</p>
-                <p className="text-lg font-bold text-gray-900">Rp {(totalSemua).toLocaleString("id-ID")}</p>
+                <p className="text-lg font-bold text-gray-900">{formatRupiah(totalSemua)}</p>
               </div>
             </div>
           </div>
@@ -269,42 +310,48 @@ export default function TagihanPage() {
           </div>
         </div>
 
-        {/* Top Section - Total Tunggakan */}
-        <Card className="border-gray-200 shadow-sm">
-          <CardHeader className="pb-3 border-b border-gray-100">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-              TOTAL TUNGGAKAN
-            </p>
-            <div className="mt-2">
-              <p className="text-4xl font-bold text-gray-900">Rp 2.450.000</p>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-red-600" aria-hidden="true" />
-              </div>
-              <p className="text-sm text-red-700 font-medium">
-                Harap segera melunasi tagihan bulan Oktober
+        {/* Total Tunggakan */}
+        {totalBelum > 0 && (
+          <Card className="border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 border-b border-gray-100">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                TOTAL TUNGGAKAN
               </p>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="mt-2">
+                <p className="text-4xl font-bold text-gray-900">{formatRupiah(totalBelumNominal)}</p>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-red-600" aria-hidden="true" />
+                </div>
+                <p className="text-sm text-red-700 font-medium">
+                  {bulanMendatang
+                    ? `Harap segera melunasi tagihan ${new Date(bulanMendatang.tgl_tagihan).toLocaleDateString('id-ID', { month: 'long' })}`
+                    : 'Tidak ada tagihan yang perlu dilunasi'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Bottom Section - Invoice Cards Grid */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Riwayat Tagihan</h2>
-            <span className="text-sm text-gray-500">
-              {filteredInvoices.length} tagihan ditemukan
-            </span>
+        {/* Invoice Cards Grid */}
+        {filtered.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Riwayat Tagihan</h2>
+              <span className="text-sm text-gray-500">
+                {filtered.length} tagihan ditemukan
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filtered.map((tagihan) => (
+                <InvoiceCard key={tagihan.id_tagihan} tagihan={tagihan} onBayar={handleBayar} onLihat={handleLihat} />
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredInvoices.map((invoice) => (
-              <InvoiceCard key={invoice.id} invoice={invoice} />
-            ))}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -1,12 +1,14 @@
 'use client'
 
+import { useState } from "react"
 import {
   SidebarProvider,
   SidebarTrigger,
   SidebarInset,
 } from "@/styles/components/ui/sidebar"
 import { AppSidebar } from "@/styles/components/ui/app-sidebar"
-import { Plus, Bell, Settings } from "lucide-react"
+import { LogOut, User } from "lucide-react"
+import Link from "next/link"
 
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from "../../../lib/hooks/useAuth"
@@ -20,16 +22,16 @@ export default function AdminLayout({
 }>) {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, isLoading } = useAuth()
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const { user, isLoading, logout } = useAuth()
 
   const getTitleFromPath = (path: string) => {
     const pathMap: Record<string, string> = {
       "/user/dashboard": "Dashboard",
-      "/user/dashboard/hunian": "Hunian",
-      "/user/dashboard/sewa": "Sewa",
+      "/user/dashboard/profile": "Profil Saya",
+      "/user/dashboard/kamar-saya": "Kamar Saya",
       "/user/dashboard/tagihan": "Tagihan",
-      "/user/dashboard/pembayaran": "Pembayaran",
-      "/user/dashboard/pengguna": "Pengguna",
+      "/user/dashboard/status": "Status",
     }
     return pathMap[path] || "Dashboard"
   }
@@ -62,33 +64,39 @@ export default function AdminLayout({
               </h1>
             </div>
 
-            {/* Right: Action Controls */}
-            <div className="flex items-center gap-3">
-              <button
-                className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 transition-colors duration-150 hover:text-gray-900 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
-              </button>
+              {/* Right: Action Controls */}
+              <div className="relative flex items-center gap-3">
+                {/* User Avatar Dropdown */}
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  onBlur={() => setTimeout(() => setDropdownOpen(false), 150)}
+                  className="h-9 w-9 rounded-full bg-linear-to-br from-blue-500 to-blue-600 text-white font-medium text-sm flex items-center justify-center cursor-pointer transition-all duration-150 hover:shadow-md hover:from-blue-600 hover:to-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  title="Menu"
+                >
+                  {user?.nama?.charAt(0)?.toUpperCase() || 'U'}
+                </button>
 
-              {/* Settings */}
-              <button
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 transition-colors duration-150 hover:text-gray-900 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                aria-label="Settings"
-              >
-                <Settings className="h-5 w-5" />
-              </button>
-
-              {/* User Avatar */}
-              <div className="ml-2 h-9 w-9 rounded-full bg-linear-to-br from-blue-500 to-blue-600 text-white font-medium text-sm flex items-center justify-center cursor-pointer transition-all duration-150 hover:shadow-md hover:from-blue-600 hover:to-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                title="User Profile"
-                role="button"
-                tabIndex={0}
-              >
-                A
+                {dropdownOpen && (
+                  <div className="absolute right-0 top-12 w-48 rounded-xl border border-gray-200 bg-white shadow-lg z-50 py-2">
+                    <Link
+                      href="/users/dashboard/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <User className="h-4 w-4 text-gray-500" />
+                      Profil Saya
+                    </Link>
+                    <hr className="my-1 border-gray-100" />
+                    <button
+                      onClick={() => { logout(); setDropdownOpen(false); }}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Keluar
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
           </div>
         </header>
 

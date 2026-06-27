@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useState, useEffect, useContext } from "react";
+import { logoutUser } from "../api/auth";
 
 interface User {
     id_user: string;
@@ -63,7 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("user", JSON.stringify(user));
     }
 
-    const logout = () => {
+    const logout = async () => {
+        await logoutUser();
         setToken(null);
         setUser(null);
         localStorage.removeItem("token");

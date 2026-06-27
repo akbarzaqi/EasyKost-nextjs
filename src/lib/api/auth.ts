@@ -1,4 +1,6 @@
+'use client';
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 
 const setLocalStorageItem = (key: string, value: string) => {
     try {
@@ -8,24 +10,66 @@ const setLocalStorageItem = (key: string, value: string) => {
     }
 }
 
+const clearLocalStorageItem = () => {
+    try {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+    } catch (error) {
+        console.error('Error removing localStorage items:', error);
+    }
+}
+
 const fetchWithAccessToken = async (url: string, options: RequestInit = {}) => {
+    
+    
+
     const accessToken = localStorage.getItem('token');
     if (!accessToken) {
         throw new Error('No access token found');
     }
 
     const headers = {
+        'Accept': 'application/json',
         ...options.headers,
         'Authorization': `Bearer ${accessToken}`,
     };
 
-    const response = await fetch(`${API_URL}${url}`, { ...options, headers });
-    const data = await response.json();
+    const response = await fetch(`${API_URL}${url}`, {
+        ...options,
+        headers,
+        redirect: 'manual',
+    });
 
-    if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 301) {
+        clearLocalStorageItem();
+        window.location.href = '/login';
+        return;
     }
 
+    if (response.status === 401) {
+        clearLocalStorageItem();
+        window.location.href = '/login';
+        return;
+    }
+
+    if (!response.ok) {
+        const text = await response.text();
+        let message: string;
+        try {
+            const data = JSON.parse(text);
+            message = data.message || `HTTP error! status: ${response.status}`;
+            if (data.errors) {
+                const details = Object.values(data.errors).flat().join(', ');
+                message += ` (${details})`;
+            }
+        } catch {
+            message = `HTTP error! status: ${response.status}`;
+        }
+        console.error('[fetchWithAccessToken] Error:', response.status, message);
+        throw new Error(message);
+    }
+
+    const data = await response.json();
     return data;
 }
 
@@ -71,4 +115,12 @@ const login = async (data: { username: string; password: string }) => {
     }
 }
     
-export { fetchWithAccessToken, fetchWithoutAccessToken, register, login, setLocalStorageItem };
+const logoutUser = async () => {
+    try {
+        await fetchWithAccessToken('/logout', { method: 'POST' });
+    } catch (err) {
+        console.error('Logout API error:', err);
+    }
+}
+
+export { fetchWithAccessToken, fetchWithoutAccessToken, register, login, logoutUser, setLocalStorageItem };

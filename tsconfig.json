@@ -22,11 +22,9 @@
     "baseUrl": "src/",
     "paths": {
       "@/styles/*": ["styles/*"],
-      "@/components/*": ["styles/components/*"]
+      "@/components/*": ["styles/components/*"],
+      "@/*": ["./*"]
     }
-    // "paths": {
-    //   "@/*": ["./src/*"]
-    // }
   },
   "include": [
     "next-env.d.ts",

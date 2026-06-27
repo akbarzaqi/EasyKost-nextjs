@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, Upload, BedDouble, Wallet, FileText, ImagePlus } from 'lucide-react'
+import { postHunian } from '../../../../../../lib/api/hunian'
 
 const formatPrice = (price: number) => `Rp ${price.toLocaleString('id-ID')}`
 
@@ -22,6 +23,29 @@ export default function TambahHunian() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewImage, setPreviewImage] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [submitError, setSubmitError] = useState('')
+
+  type dataHunian = {
+    nama_hunian: string,
+    tipe_hunian: string,
+    gambar_hunian: File | null,
+    deskripsi_hunian: string,
+    status_harian: string,
+    wifi: number,
+    sampah: number,
+    kost: number,
+  }
+
+  const data: dataHunian = {
+    nama_hunian: name,
+    tipe_hunian: type,
+    gambar_hunian: imageFile,
+    deskripsi_hunian: description,
+    status_harian: status,
+    wifi: Number(hargaWifi),
+    sampah: Number(hargaAir),
+    kost: Number(hargaKost),
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -40,29 +64,48 @@ export default function TambahHunian() {
     if (!type.trim()) newErrors.type = 'Tipe kamar wajib dipilih'
     if (!hargaKost || Number(hargaKost) < 0) newErrors.harga_kost = 'Harga kost harus diisi'
     if (!hargaWifi || Number(hargaWifi) < 0) newErrors.harga_wifi = 'Harga wifi harus diisi'
-    if (!hargaAir || Number(hargaAir) < 0) newErrors.harga_air = 'Harga sampah harus diisi'
+    if (!hargaAir || Number(hargaAir) < 0) newErrors.harga_sampah = 'Harga sampah harus diisi'
     if (!description.trim()) newErrors.description = 'Deskripsi wajib diisi'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const parsingStatus = (status: string) => {
+    switch (status) {
+      case 'Kosong':
+        return 'kosong'
+      case 'Terisi':
+        return 'full'
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
     const total_price = Number(hargaKost) + Number(hargaWifi) + Number(hargaAir)
-    const newHunian = {
-      name,
-      type,
-      status,
-      harga_kost: Number(hargaKost),
-      harga_wifi: Number(hargaWifi),
-      harga_air: Number(hargaAir),
-      total_price,
-      description,
-      image_url: previewImage || '/images/room1.jpg',
+    console.log('Data hunian yang akan dikirim:', { ...data, total_price })
+    
+    try {
+      const response = await postHunian({
+        nama_hunian: name,
+        tipe_hunian: type,
+        gambar_hunian: imageFile!,
+        deskripsi_hunian: description,
+        status_harian: parsingStatus(status)!,
+        wifi: Number(hargaWifi),
+        sampah: Number(hargaAir),
+        kost: Number(hargaKost),
+      })
+
+      if (!response.error) {
+        router.push('/admin/dashboard/hunian')
+      } else {
+        setSubmitError(response.message || 'Gagal menambahkan hunian')
+      }
+
+    }catch (error) {
+      setSubmitError('Terjadi kesalahan saat menambahkan hunian')
     }
-    console.log('Data hunian baru:', newHunian)
-    router.push('/admin/dashboard/hunian')
   }
 
   return (
@@ -304,6 +347,10 @@ export default function TambahHunian() {
                   </div>
                 </CardContent>
               </Card>
+
+              {submitError && (
+                <p className="text-sm text-rose-600 text-center bg-rose-50 p-3 rounded-lg">{submitError}</p>
+              )}
 
               <Card className="border border-gray-200 rounded-xl bg-white shadow-sm">
                 <CardContent className="pt-6 space-y-3">

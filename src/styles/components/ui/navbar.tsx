@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus, Bell, Settings, Search } from "lucide-react"
+import { Plus, Search } from "lucide-react"
 import { Button } from "@/styles/components/ui/button"
 import { cn } from "@/styles/lib/utils"
 
@@ -48,24 +48,6 @@ export function DashboardNavbar({ title = "Dashboard", className }: NavbarProps)
           aria-label="Generate"
         >
           Generate
-        </button>
-
-        {/* Notification Bell */}
-        <button
-          className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-          {/* Notification Indicator Dot */}
-          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500" />
-        </button>
-
-        {/* Settings Icon */}
-        <button
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-          aria-label="Settings"
-        >
-          <Settings className="h-5 w-5" />
         </button>
 
         {/* User Avatar */}

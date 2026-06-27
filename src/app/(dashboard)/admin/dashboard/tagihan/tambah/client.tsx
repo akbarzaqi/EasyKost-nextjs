@@ -1,102 +1,107 @@
 'use client'
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { ArrowLeft, FileText, Wallet, Calendar, Building2, Plus } from 'lucide-react'
-
-type HunianSewa = {
-  id: number
-  name: string
-  penghuni: string
-  harga_kost: number
-  harga_wifi: number
-  harga_air: number
-  total_price: number
-  type: string
-}
-
-const occupiedUnits: HunianSewa[] = [
-  { id: 1, name: 'Kamar A1', penghuni: 'Akbar Zaki', harga_kost: 800000, harga_wifi: 100000, harga_air: 100000, total_price: 1000000, type: 'Premium Room' },
-  { id: 3, name: 'Kamar C3', penghuni: 'Budi Santoso', harga_kost: 300000, harga_wifi: 100000, harga_air: 100000, total_price: 500000, type: 'Economy Room' },
-]
-
-const existingInvoices = ['INV-001', 'INV-002', 'INV-003']
-
-const generateInvoiceNumber = () => {
-  const maxNum = existingInvoices.reduce((max, inv) => {
-    const num = parseInt(inv.replace('INV-', ''), 10)
-    return isNaN(num) ? max : Math.max(max, num)
-  }, 0)
-  const nextNum = String(maxNum + 1).padStart(3, '0')
-  return `INV-${nextNum}`
-}
+import { ArrowLeft, FileText, Wallet, Calendar, Building2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { getAllSewa } from '@/lib/api/sewa'
+import { getAllTagihan, generateTagihan } from '@/lib/api/tagihan'
 
 const formatRupiah = (amount: number) => `Rp ${amount.toLocaleString('id-ID')}`
 
 export default function TambahTagihanClient() {
   const router = useRouter()
 
-  const [selectedUnit, setSelectedUnit] = useState<HunianSewa | null>(null)
-  const [invoiceNumber, setInvoiceNumber] = useState('')
-  const [namaPenghuni, setNamaPenghuni] = useState('')
-  const [hargaAir, setHargaAir] = useState(0)
-  const [jatuhTempo, setJatuhTempo] = useState('')
-  const [status, setStatus] = useState<'belum_bayar' | 'lunas' | 'verifikasi'>('belum_bayar')
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [sewaList, setSewaList] = useState<any[]>([])
+  const [existingTagihanIds, setExistingTagihanIds] = useState<Set<number>>(new Set())
+  const [airValues, setAirValues] = useState<Record<number, number>>({})
+  const [bulan, setBulan] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    setInvoiceNumber(generateInvoiceNumber())
+    const now = new Date()
+    setBulan(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
   }, [])
 
-  const selectUnit = (unit: HunianSewa) => {
-    setSelectedUnit(unit)
-    setNamaPenghuni(unit.penghuni)
-    setHargaAir(0)
-    setErrors({})
+  useEffect(() => {
+    const fetchData = async () => {
+      const [sewaRes, tagihanRes] = await Promise.all([getAllSewa(), getAllTagihan()])
+
+      if (!sewaRes.error && sewaRes.data) {
+        const aktif = sewaRes.data.filter((s: any) => s.status === 'aktif')
+        setSewaList(aktif)
+      }
+
+      if (!tagihanRes.error && tagihanRes.data) {
+        const now = new Date()
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+        const ids = new Set<number>()
+        tagihanRes.data.forEach((t: any) => {
+          const tagihanMonth = t.tgl_tagihan?.substring(0, 7)
+          if (tagihanMonth === currentMonth) {
+            ids.add(t.id_sewa)
+          }
+        })
+        setExistingTagihanIds(ids)
+      }
+
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
+
+  const handleAirChange = (idSewa: number, value: string) => {
+    setAirValues(prev => ({ ...prev, [idSewa]: Number(value) || 0 }))
   }
 
-  const staticTotal = selectedUnit
-    ? selectedUnit.harga_kost + selectedUnit.harga_wifi + selectedUnit.harga_air
-    : 0
-  const total = staticTotal + hargaAir
+  const needsTagihan = (sewa: any) => !existingTagihanIds.has(sewa.id_sewa)
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
-    if (!selectedUnit) newErrors.unit = 'Pilih unit hunian terlebih dahulu'
-    if (!invoiceNumber.trim()) newErrors.invoiceNumber = 'Nomor invoice wajib diisi'
-    if (!namaPenghuni.trim()) newErrors.namaPenghuni = 'Nama penghuni wajib diisi'
-    if (total <= 0) newErrors.rincian = 'Total rincian harus lebih dari 0'
-    if (!jatuhTempo) newErrors.jatuhTempo = 'Jatuh tempo wajib diisi'
+    const pending = sewaList.filter(needsTagihan)
+    if (pending.length === 0) {
+      newErrors.submit = 'Semua sewa sudah memiliki tagihan bulan ini'
+    }
+    if (!bulan) newErrors.bulan = 'Bulan wajib diisi'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
-    console.log('Tagihan baru:', {
-      invoiceNumber,
-      nama_penghuni: namaPenghuni,
-      kamar: selectedUnit?.name,
-      rincian: [
-        { name: 'Kost', value: selectedUnit!.harga_kost },
-        { name: 'WiFi', value: selectedUnit!.harga_wifi },
-        { name: 'Sampah', value: selectedUnit!.harga_air },
-        { name: 'Air', value: hargaAir },
-      ],
-      total,
-      jatuh_tempo: jatuhTempo,
-      status,
-    })
-    router.push('/admin/dashboard/tagihan')
+
+    const pending = sewaList.filter(needsTagihan)
+    const data = pending.map((sewa: any) => ({
+      id_sewa: sewa.id_sewa,
+      air: airValues[sewa.id_sewa] || 0,
+    }))
+
+    setSubmitting(true)
+    const response = await generateTagihan(bulan, data)
+    setSubmitting(false)
+
+    if (!response.error) {
+      router.push('/admin/dashboard/tagihan')
+    } else {
+      setErrors({ submit: response.message || 'Gagal membuat tagihan' })
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <button
           onClick={() => router.back()}
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-6 group"
@@ -109,261 +114,136 @@ export default function TambahTagihanClient() {
 
         <div className="mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Tambah Tagihan</h1>
-          <p className="text-sm text-gray-500 mt-1">Buat tagihan baru berdasarkan data sewa yang sudah ada.</p>
+          <p className="text-sm text-gray-500 mt-1">Buat tagihan untuk penghuni yang belum memiliki tagihan bulan ini.</p>
         </div>
 
-        {/* Pilih Unit Sewa */}
-        <div className="mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-gray-400" />
-            Pilih Kamar Terisi
-          </h2>
-          {errors.unit && <p className="text-xs text-rose-500 mb-2">{errors.unit}</p>}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {occupiedUnits.map((unit) => {
-              const isSelected = selectedUnit?.id === unit.id
-              return (
-                <button
-                  key={unit.id}
-                  type="button"
-                  onClick={() => selectUnit(unit)}
-                  className={`text-left p-4 rounded-xl border-2 transition-all ${
-                    isSelected
-                      ? 'border-gray-900 bg-gray-50 shadow-md'
-                      : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-gray-900">{unit.name}</span>
-                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{unit.type}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Biaya per bulan</span>
-                    <span className="font-semibold text-emerald-600">{formatRupiah(unit.total_price)}</span>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {selectedUnit && (
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-5">
-                <Card className="border border-gray-200 rounded-xl bg-white shadow-sm">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-gray-400" />
-                      Informasi Tagihan
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="invoiceNumber" className="text-sm font-medium text-gray-700">
-                          No. Invoice <span className="text-rose-500">*</span>
-                        </Label>
-                        <Input
-                          id="invoiceNumber"
-                          type="text"
-                          placeholder="INV-001"
-                          value={invoiceNumber}
-                          onChange={(e) => { setInvoiceNumber(e.target.value); setErrors(prev => ({ ...prev, invoiceNumber: '' })) }}
-                          className={`h-10 ${errors.invoiceNumber ? 'border-rose-500 focus-visible:ring-rose-500/50' : ''}`}
-                        />
-                        {errors.invoiceNumber && <p className="text-xs text-rose-500">{errors.invoiceNumber}</p>}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="status" className="text-sm font-medium text-gray-700">
-                          Status
-                        </Label>
-                        <select
-                          id="status"
-                          value={status}
-                          onChange={(e) => setStatus(e.target.value as 'belum_bayar' | 'lunas' | 'verifikasi')}
-                          className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
-                        >
-                          <option value="belum_bayar">Belum Bayar</option>
-                          <option value="verifikasi">Verifikasi</option>
-                          <option value="lunas">Lunas</option>
-                        </select>
-                      </div>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-5">
+            <Card className="border border-gray-200 rounded-xl bg-white shadow-sm">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-gray-400" />
+                    Sewa Aktif
+                  </CardTitle>
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-gray-500">
+                      <span className="font-semibold text-emerald-600">{sewaList.filter(s => !needsTagihan(s)).length}</span> sudah ada tagihan
+                      {' / '}
+                      <span className="font-semibold text-amber-600">{sewaList.filter(s => needsTagihan(s)).length}</span> perlu tagihan
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="nama_penghuni" className="text-sm font-medium text-gray-700">
-                          Nama Penghuni <span className="text-rose-500">*</span>
-                        </Label>
-                        <Input
-                          id="nama_penghuni"
-                          type="text"
-                          placeholder="Contoh: Akbar Zaki"
-                          value={namaPenghuni}
-                          onChange={(e) => { setNamaPenghuni(e.target.value); setErrors(prev => ({ ...prev, namaPenghuni: '' })) }}
-                          className={`h-10 ${errors.namaPenghuni ? 'border-rose-500 focus-visible:ring-rose-500/50' : ''}`}
-                        />
-                        {errors.namaPenghuni && <p className="text-xs text-rose-500">{errors.namaPenghuni}</p>}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Kamar
-                        </Label>
-                        <div className="h-10 flex items-center px-3 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-200">
-                          {selectedUnit.name}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-gray-200 rounded-xl bg-white shadow-sm">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <Wallet className="h-5 w-5 text-gray-400" />
-                      Rincian Biaya
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className="w-24 text-sm font-medium text-gray-700">Kost</span>
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
-                        <div className="h-10 pl-10 flex items-center text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-200">
-                          {selectedUnit.harga_kost.toLocaleString('id-ID')}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="w-24 text-sm font-medium text-gray-700">WiFi</span>
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
-                        <div className="h-10 pl-10 flex items-center text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-200">
-                          {selectedUnit.harga_wifi.toLocaleString('id-ID')}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="w-24 text-sm font-medium text-gray-700">Sampah</span>
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
-                        <div className="h-10 pl-10 flex items-center text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-200">
-                          {selectedUnit.harga_air.toLocaleString('id-ID')}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="border-t border-gray-100 pt-3">
-                      <div className="flex items-center gap-3">
-                        <span className="w-24 text-sm font-medium text-gray-700">Air</span>
-                        <div className="relative flex-1">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
-                          <Input
-                            type="number"
-                            value={hargaAir || ''}
-                            onChange={(e) => setHargaAir(Number(e.target.value) || 0)}
-                            className="h-10 pl-10"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    {errors.rincian && <p className="text-xs text-rose-500">{errors.rincian}</p>}
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-gray-200 rounded-xl bg-white shadow-sm">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-gray-400" />
-                      Jatuh Tempo
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <Label htmlFor="jatuh_tempo" className="text-sm font-medium text-gray-700">
-                        Tanggal Jatuh Tempo <span className="text-rose-500">*</span>
-                      </Label>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-gray-600">Bulan</label>
                       <Input
-                        id="jatuh_tempo"
-                        type="date"
-                        value={jatuhTempo}
-                        onChange={(e) => { setJatuhTempo(e.target.value); setErrors(prev => ({ ...prev, jatuhTempo: '' })) }}
-                        className={`h-10 ${errors.jatuhTempo ? 'border-rose-500 focus-visible:ring-rose-500/50' : ''}`}
+                        type="month"
+                        value={bulan}
+                        onChange={(e) => setBulan(e.target.value)}
+                        className="h-9 w-40"
                       />
-                      {errors.jatuhTempo && <p className="text-xs text-rose-500">{errors.jatuhTempo}</p>}
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                {sewaList.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-8">Tidak ada sewa aktif.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {sewaList.map((sewa: any) => {
+                      const sudahAda = !needsTagihan(sewa)
+                      const user = sewa.user || {}
+                      const hunian = sewa.hunian || {}
+                      const biaya = hunian.biaya || {}
+                      const namaPenghuni = user.nama || user.nama_lengkap || '-'
+                      const kamar = hunian.nama_hunian || '-'
+                      const biayaKost = Number(biaya.kost) || 0
+                      const biayaWifi = Number(biaya.wifi) || 0
+                      const biayaSampah = Number(biaya.sampah) || 0
+                      const totalBiaya = biayaKost + biayaWifi + biayaSampah
 
-              <div className="space-y-5">
-                <Card className="border border-gray-200 rounded-xl bg-white shadow-sm">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-gray-400" />
-                      Ringkasan
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Invoice</span>
-                      <span className="font-mono font-semibold text-gray-900">{invoiceNumber || '-'}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Penghuni</span>
-                      <span className="font-medium text-gray-900">{namaPenghuni || '-'}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Kamar</span>
-                      <span className="font-medium text-gray-900">{selectedUnit.name}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Status</span>
-                      <span className={`font-medium ${status === 'lunas' ? 'text-emerald-600' : status === 'verifikasi' ? 'text-amber-600' : 'text-rose-600'}`}>
-                        {status === 'lunas' ? 'Lunas' : status === 'verifikasi' ? 'Verifikasi' : 'Belum Bayar'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Rincian</span>
-                      <span className="font-medium text-gray-900">4 item</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Jatuh Tempo</span>
-                      <span className="font-medium text-gray-900">{jatuhTempo || '-'}</span>
-                    </div>
-                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-500">Total</span>
-                      <span className="text-lg font-bold text-emerald-600">
-                        {total > 0 ? formatRupiah(total) : '-'}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
+                      return (
+                        <div
+                          key={sewa.id_sewa}
+                          className={`p-4 rounded-xl border-2 transition-all ${
+                            sudahAda
+                              ? 'border-emerald-200 bg-emerald-50/50'
+                              : 'border-amber-200 bg-amber-50/50'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-gray-900">{namaPenghuni}</span>
+                                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{kamar}</span>
+                                {sudahAda ? (
+                                  <span className="inline-flex items-center gap-1 text-xs text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    Sudah Ada Tagihan
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                                    <AlertCircle className="h-3 w-3" />
+                                    Perlu Tagihan
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                Jatuh tempo: <span className="font-medium text-gray-700">{sewa.tgl_jatuhtempo ? new Date(sewa.tgl_jatuhtempo).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</span>
+                              </div>
+                              {!sudahAda && (
+                                <div className="mt-2 text-sm text-gray-600">
+                                  Biaya: {formatRupiah(totalBiaya)}/bl + Air
+                                </div>
+                              )}
+                            </div>
+                            {!sudahAda && (
+                              <div className="flex items-center gap-2">
+                                <label className="text-sm text-gray-600">Air</label>
+                                <Input
+                                  type="number"
+                                  placeholder="0"
+                                  value={airValues[sewa.id_sewa] || ''}
+                                  onChange={(e) => handleAirChange(sewa.id_sewa, e.target.value)}
+                                  className="h-9 w-24"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-                <Card className="border border-gray-200 rounded-xl bg-white shadow-sm">
-                  <CardContent className="pt-6 space-y-3">
-                    <button
-                      type="submit"
-                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Buat Tagihan
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => router.back()}
-                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white text-gray-700 text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
-                    >
-                      Batal
-                    </button>
-                  </CardContent>
-                </Card>
-              </div>
+            {errors.submit && (
+              <p className="text-sm text-rose-600 text-center">{errors.submit}</p>
+            )}
+
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+                className="h-10"
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                disabled={submitting || sewaList.filter(needsTagihan).length === 0}
+                className="h-10 bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Membuat...</>
+                ) : (
+                  <>Buat Tagihan ({sewaList.filter(needsTagihan).length})</>
+                )}
+              </Button>
             </div>
-          </form>
-        )}
+          </div>
+        </form>
       </div>
     </div>
   )

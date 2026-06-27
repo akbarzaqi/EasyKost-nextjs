@@ -1,5 +1,7 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   MessageSquare,
   MapPin,
@@ -8,27 +10,81 @@ import {
   ChevronRight,
   Wallet,
   BedDouble,
+  Home,
+  Loader2,
+  Calendar,
+  Wifi,
+  Trash2,
+  AlertCircle,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/styles/components/ui/card";
 import { Button } from "@/styles/components/ui/button";
 import { Badge } from "@/styles/components/ui/badge";
+import { getMySewa } from "@/lib/api/sewa";
 
-const contractInfo = [
-  { label: "ID Kontrak", value: "#RR-2023-9812" },
-  { label: "Tanggal Mulai", value: "12 Jan 2024" },
-  { label: "Jatuh Tempo", value: "12 Feb 2024" },
-  { label: "Metode Bayar", value: "Bank Transfer" },
-];
+const formatRupiah = (amount: number) => `Rp ${amount.toLocaleString('id-ID')}`;
 
-const quickActions = [
-  { icon: History, label: "Riwayat Pembayaran", rightIcon: ChevronRight },
-];
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+};
 
 export default function KamarSayaPage() {
+  const router = useRouter();
+  const [sewa, setSewa] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getMySewa();
+      if (!response.error && response.data) {
+        setSewa(response.data);
+      }
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F7] flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (!sewa || !sewa.hunian) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F7] p-6 md:p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <Home className="h-8 w-8 text-gray-300" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900">Belum Ada Sewa Aktif</h2>
+          <p className="text-gray-500 mt-2 max-w-sm">
+            Anda belum memiliki kamar yang disewa. Silakan booking kamar terlebih dahulu.
+          </p>
+          <Button
+            onClick={() => router.push('/')}
+            className="mt-6 bg-gray-900 text-white hover:bg-gray-800"
+          >
+            Cari Kamar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const hunian = sewa.hunian;
+  const biaya = hunian.biaya;
+  const totalPrice = biaya
+    ? Number(biaya.wifi) + Number(biaya.sampah) + Number(biaya.kost)
+    : 0;
+
   return (
     <div className="min-h-screen bg-[#F7F7F7] p-6 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Breadcrumb & Header */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <nav className="flex items-center gap-2 text-sm text-gray-500">
@@ -49,16 +105,24 @@ export default function KamarSayaPage() {
           </Button>
         </div>
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Room Info & Amenities */}
+          {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
-              {/* Image Banner */}
-              <div className="relative h-56 md:h-72 bg-gradient-to-br from-gray-200 to-gray-300">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyek0zNiAxNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
+              {/* Image */}
+              <div className="relative h-56 md:h-72 bg-gray-200">
+                {hunian.gambar_hunian ? (
+                  <img
+                    src={hunian.gambar_hunian}
+                    alt={hunian.nama_hunian}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+                    <Home className="h-16 w-16 text-gray-400" />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                {/* Badges */}
                 <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -66,19 +130,15 @@ export default function KamarSayaPage() {
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/90 text-gray-700 backdrop-blur-sm">
                     <BedDouble className="h-3 w-3" />
-                    Deluxe Suite
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/90 text-gray-700 backdrop-blur-sm">
-                    Lantai 1
+                    {hunian.tipe_hunian}
                   </span>
                 </div>
-                {/* Room Name Overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
                   <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-sm">
-                    Deluxe Suite &ndash; A102
+                    {hunian.nama_hunian}
                   </h1>
                   <p className="text-sm text-white/80 max-w-xl leading-relaxed mt-1">
-                    Kamar dengan fasilitas lengkap dan nyaman untuk hunian jangka panjang.
+                    {hunian.deskripsi_hunian || 'Kamar dengan fasilitas lengkap.'}
                   </p>
                 </div>
               </div>
@@ -93,21 +153,25 @@ export default function KamarSayaPage() {
                     <span className="text-sm font-medium text-gray-500">Rincian Harga</span>
                   </div>
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Kost</span>
-                      <span className="font-medium text-gray-900">Rp 2.000.000</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">WiFi</span>
-                      <span className="font-medium text-gray-900">Rp 350.000</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Sampah</span>
-                      <span className="font-medium text-gray-900">Rp 100.000</span>
-                    </div>
+                    {biaya && (
+                      <>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500">Kost</span>
+                          <span className="font-medium text-gray-900">{formatRupiah(Number(biaya.kost))}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500">WiFi</span>
+                          <span className="font-medium text-gray-900">{formatRupiah(Number(biaya.wifi))}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500">Sampah</span>
+                          <span className="font-medium text-gray-900">{formatRupiah(Number(biaya.sampah))}</span>
+                        </div>
+                      </>
+                    )}
                     <div className="pt-1.5 border-t border-gray-100 flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-700">Total</span>
-                      <span className="text-lg font-bold text-emerald-600">Rp 2.450.000</span>
+                      <span className="text-lg font-bold text-emerald-600">{formatRupiah(totalPrice)}</span>
                     </div>
                   </div>
                 </div>
@@ -119,10 +183,10 @@ export default function KamarSayaPage() {
                     </span>
                     <span className="text-sm font-medium text-gray-500">Tipe Kamar</span>
                   </div>
-                  <p className="text-lg font-semibold text-gray-900">Deluxe Suite</p>
+                  <p className="text-lg font-semibold text-gray-900">{hunian.tipe_hunian}</p>
                   <div className="flex items-center gap-1.5 mt-1 text-gray-500">
-                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span className="text-sm">Lantai 1, Sayap Timur</span>
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span className="text-sm">{hunian.nama_hunian}</span>
                   </div>
                 </div>
 
@@ -134,62 +198,73 @@ export default function KamarSayaPage() {
                     <span className="text-sm font-medium text-gray-500">Status</span>
                   </div>
                   <p className="text-lg font-semibold text-gray-900">Aktif</p>
-                  <p className="text-sm text-gray-500 mt-1">Periode Okt 2024 - Sep 2025</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Jatuh tempo: {formatDate(sewa.tgl_jatuhtempo)}
+                  </p>
                 </div>
               </div>
-
-
             </div>
           </div>
 
-          {/* Right Column - Rental Info */}
+          {/* Right Column */}
           <div className="space-y-6">
             <Card className="border-gray-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-gray-100">
                 <CardTitle className="text-base font-semibold text-gray-900">Info Penyewaan</CardTitle>
-                <Badge className="gap-1.5 bg-gray-100 text-gray-700 border-gray-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                <Badge className="gap-1.5 bg-emerald-100 text-emerald-700 border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   Aktif
                 </Badge>
               </CardHeader>
               <CardContent className="pt-4 space-y-4">
-                {contractInfo.map((item) => (
-                  <div key={item.label} className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">{item.label}</span>
-                    <span className="font-semibold text-gray-900">{item.value}</span>
-                  </div>
-                ))}
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">ID Sewa</span>
+                  <span className="font-semibold text-gray-900">#{sewa.id_sewa}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">Kamar</span>
+                  <span className="font-semibold text-gray-900">{hunian.nama_hunian}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">Tanggal Request</span>
+                  <span className="font-semibold text-gray-900">{formatDate(sewa.created_at)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">Jatuh Tempo</span>
+                  <span className="font-semibold text-gray-900">{formatDate(sewa.tgl_jatuhtempo)}</span>
+                </div>
 
                 <div className="border-t border-gray-100 pt-4">
                   <div className="p-4 bg-gray-50 rounded-xl space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-gray-900 rounded-lg">
-                        <CreditCard className="h-4 w-4 text-white" aria-hidden="true" />
+                        <CreditCard className="h-4 w-4 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">Tagihan Berikutnya</p>
-                        <p className="text-xs text-gray-500">Sisa 8 hari lagi</p>
+                        <p className="text-sm font-semibold text-gray-900">Tagihan</p>
+                        <p className="text-xs text-gray-500">{formatRupiah(totalPrice)} / bulan</p>
                       </div>
                     </div>
-                    <Button className="w-full bg-black text-white hover:bg-gray-900 font-medium py-2.5 text-sm">
-                      Bayar Sekarang
+                    <Button
+                      onClick={() => router.push('/users/dashboard/tagihan')}
+                      className="w-full bg-black text-white hover:bg-gray-900 font-medium py-2.5 text-sm"
+                    >
+                      Lihat Tagihan
                     </Button>
                   </div>
                 </div>
 
                 <div className="border-t border-gray-100 pt-4 space-y-1">
-                  {quickActions.map((action) => (
-                    <button
-                      key={action.label}
-                      className="flex items-center justify-between w-full py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <action.icon className="h-4 w-4 text-gray-500" aria-hidden="true" />
-                        <span className="text-gray-700 font-medium">{action.label}</span>
-                      </div>
-                      <action.rightIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
-                    </button>
-                  ))}
+                  <button
+                    onClick={() => router.push('/users/dashboard/tagihan')}
+                    className="flex items-center justify-between w-full py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <History className="h-4 w-4 text-gray-500" />
+                      <span className="text-gray-700 font-medium">Riwayat Pembayaran</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  </button>
                 </div>
               </CardContent>
             </Card>

@@ -1,61 +1,51 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
   Landmark,
   CloudUpload,
   Send,
   Clock,
+  ArrowLeft,
+  Loader2,
+  Home,
 } from "lucide-react";
 import { Card, CardContent } from "@/styles/components/ui/card";
 import { Button } from "@/styles/components/ui/button";
+import { getMyTagihan } from "@/lib/api/tagihan";
+import { createTransaksi } from "@/lib/api/transaksi";
+import { uploadPembayaran } from "@/lib/api/pembayaran";
 
-interface InvoiceItem {
-  label: string;
-  amount: string;
-}
-
-const invoiceData: Record<string, { id: string; invoiceNumber: string; month: string; year: number; total: string; items: InvoiceItem[] }> = {
-  "INV-202310882": {
-    id: "oct-2024",
-    invoiceNumber: "INV-202310882",
-    month: "Oktober",
-    year: 2024,
-    total: "Rp 2.450.000",
-    items: [
-      { label: "Biaya Kost", amount: "Rp 2.000.000" },
-      { label: "Listrik (Token)", amount: "Rp 350.000" },
-      { label: "Air & Kebersihan", amount: "Rp 100.000" },
-    ],
-  },
-  "INV-202309764": {
-    id: "sep-2024",
-    invoiceNumber: "INV-202309764",
-    month: "September",
-    year: 2024,
-    total: "Rp 2.380.000",
-    items: [],
-  },
-  "INV-202308651": {
-    id: "aug-2024",
-    invoiceNumber: "INV-202308651",
-    month: "Agustus",
-    year: 2024,
-    total: "Rp 2.510.000",
-    items: [],
-  },
-};
+const formatRupiah = (amount: number) => `Rp ${amount.toLocaleString('id-ID')}`;
 
 export default function UploadBuktiPage() {
   const params = useParams();
-  const invoiceId = params.id as string;
-  const invoice = invoiceData[invoiceId];
+  const router = useRouter();
+  const [tagihan, setTagihan] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const [senderName, setSenderName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getMyTagihan();
+      if (!response.error && response.data) {
+        const found = response.data.find((t: any) => String(t.id_tagihan) === params.id);
+        if (!found || found.status !== "notpaid") {
+          setError(found?.status === "paid" ? "Tagihan ini sudah lunas" : "Tagihan tidak ditemukan");
+        }
+        setTagihan(found || null);
+      }
+      setLoading(false);
+    };
+    fetchData();
+  }, [params.id]);
 
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -69,20 +59,86 @@ export default function UploadBuktiPage() {
     if (selected) setFile(selected);
   };
 
-  if (!invoice) {
+  const handleSubmit = async () => {
+    if (!senderName.trim()) {
+      setError("Nama pengirim harus diisi");
+      return;
+    }
+    if (!file) {
+      setError("Bukti pembayaran harus diupload");
+      return;
+    }
+    setError("");
+    setSubmitting(true);
+
+    const transaksiRes = await createTransaksi(Number(params.id));
+    if (transaksiRes.error) {
+      setError(transaksiRes.message || "Gagal membuat transaksi");
+      setSubmitting(false);
+      return;
+    }
+
+    const invoice = transaksiRes.data.invoice;
+    const today = new Date().toISOString().split("T")[0];
+
+    const formData = new FormData();
+    formData.append("invoice", invoice);
+    formData.append("nama_pengirim", senderName.trim());
+    formData.append("bukti_trf", file);
+    formData.append("tgl_bayar", today);
+
+    const uploadRes = await uploadPembayaran(formData);
+    if (uploadRes.error) {
+      setError(uploadRes.message || "Gagal mengupload bukti pembayaran");
+      setSubmitting(false);
+      return;
+    }
+
+    router.push("/users/dashboard/tagihan");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F7] p-6 md:p-8 flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (!tagihan || error && !tagihan) {
     return (
       <div className="min-h-screen bg-[#F7F7F7] p-6 md:p-8">
         <div className="max-w-2xl mx-auto text-center py-20">
-          <p className="text-gray-500">Tagihan tidak ditemukan</p>
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <Home className="h-8 w-8 text-gray-300" />
+          </div>
+          <p className="text-gray-500">{error || "Tagihan tidak ditemukan"}</p>
+          <Button variant="outline" onClick={() => router.back()} className="mt-4 cursor-pointer">
+            Kembali
+          </Button>
         </div>
       </div>
     );
   }
 
+  const biaya = tagihan.sewa?.hunian?.biaya;
+  const biayaKost = biaya ? Number(biaya.kost) : 0;
+  const biayaWifi = biaya ? Number(biaya.wifi) : 0;
+  const biayaSampah = biaya ? Number(biaya.sampah) : 0;
+  const biayaAir = Number(tagihan.air) || 0;
+  const total = biayaKost + biayaWifi + biayaSampah + biayaAir;
+
   return (
     <div className="min-h-screen bg-[#F7F7F7] p-6 md:p-8">
       <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Kembali
+        </button>
+
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
             Upload Bukti Bayar
@@ -92,17 +148,35 @@ export default function UploadBuktiPage() {
           </p>
         </div>
 
-        {/* Invoice Info */}
         <Card className="border-gray-200 shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div className="flex justify-between items-start gap-4">
               <div>
                 <p className="text-xs font-medium text-gray-500 tracking-wider uppercase">ID TAGIHAN</p>
-                <p className="font-bold text-gray-900 mt-0.5">#{invoice.invoiceNumber}</p>
+                <p className="font-bold text-gray-900 mt-0.5">#{tagihan.id_tagihan}</p>
               </div>
               <div className="text-right">
                 <p className="text-xs font-medium text-gray-500 tracking-wider uppercase">TOTAL TRANSFER</p>
-                <p className="font-bold text-gray-900 mt-0.5">{invoice.total}</p>
+                <p className="font-bold text-gray-900 mt-0.5">{formatRupiah(total)}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2 border-t border-gray-100 pt-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Biaya Kost</span>
+                <span className="text-gray-900">{formatRupiah(biayaKost)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">WiFi</span>
+                <span className="text-gray-900">{formatRupiah(biayaWifi)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Kebersihan/Sampah</span>
+                <span className="text-gray-900">{formatRupiah(biayaSampah)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Air</span>
+                <span className="text-gray-900">{formatRupiah(biayaAir)}</span>
               </div>
             </div>
 
@@ -119,7 +193,6 @@ export default function UploadBuktiPage() {
           </CardContent>
         </Card>
 
-        {/* Sender Name */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-1.5">
             Nama Pengirim
@@ -133,7 +206,6 @@ export default function UploadBuktiPage() {
           />
         </div>
 
-        {/* File Upload */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-1.5">
             Bukti Pembayaran
@@ -178,22 +250,35 @@ export default function UploadBuktiPage() {
                 </div>
                 <div className="text-center">
                   <p className="font-medium text-gray-900 text-sm">Klik atau seret gambar ke sini</p>
-                  <p className="text-xs text-gray-500 mt-0.5">PNG, JPG atau JPEG (Maks. 5MB)</p>
+                  <p className="text-xs text-gray-500 mt-0.5">PNG, JPG atau JPEG (Maks. 2MB)</p>
                 </div>
               </>
             )}
           </div>
         </div>
 
-        {/* Submit Button */}
+        {error && (
+          <p className="text-sm text-red-600 text-center">{error}</p>
+        )}
+
         <Button
-          className="w-full bg-black text-white hover:bg-gray-900 font-semibold py-3.5 gap-2 text-base"
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="w-full bg-black text-white hover:bg-gray-900 font-semibold py-3.5 gap-2 text-base cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Kirim Bukti Pembayaran
-          <Send className="h-4 w-4" aria-hidden="true" />
+          {submitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Memproses...
+            </>
+          ) : (
+            <>
+              Kirim Bukti Pembayaran
+              <Send className="h-4 w-4" aria-hidden="true" />
+            </>
+          )}
         </Button>
 
-        {/* Footer Note */}
         <div className="flex items-center justify-center gap-2">
           <Clock className="h-4 w-4 text-gray-400" aria-hidden="true" />
           <p className="text-sm text-gray-500 italic">

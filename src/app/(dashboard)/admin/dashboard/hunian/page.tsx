@@ -14,53 +14,50 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Home, CheckCircle2, XCircle, Pencil, Eye, BedDouble, Wallet } from "lucide-react"
 import Link from "next/link"
+import { getAllHunian } from "../../../../../lib/api/hunian"
+import { getBiaya } from "../../../../../lib/api/biaya"
 
 type Hunian = {
-    id: number,
-    name: string,
+    id_hunian: number,
+    nama_hunian: string,
     total_price: number,
-    type: string,
-    status: string,
-    description: string,
-    image_url: string,
+    tipe_hunian: string,
+    status_harian: string,
+    deskripsi_hunian: string,
+    gambar_hunian: string,
 }
 
-const data: Hunian[] = [
-    {
-        id: 1,
-        name: "Kamar A1",
-        total_price: 1000000,
-        type: "Premium Room",
-        status: "Terisi",
-        description: "Kamar dengan fasilitas lengkap dan nyaman untuk hunian jangka panjang.",
-        image_url: "/images/room1.jpg",
-    },
-    {
-        id: 2,
-        name: "Kamar B2",
-        total_price: 750000,
-        type: "Standard Room",
-        status: "Kosong",
-        description: "Kamar dengan fasilitas standar yang cocok untuk hunian sementara.",
-        image_url: "/images/room1.jpg",
-    },
-    {
-        id: 3,
-        name: "Kamar C3",
-        total_price: 500000,
-        type: "Economy Room",
-        status: "Terisi",
-        description: "Kamar dengan fasilitas dasar yang cocok untuk hunian dengan budget terbatas.",
-        image_url: "/images/room1.jpg",
+const data: Hunian[] = []
+
+const fetchBiayaData = async (id: string) => {
+    try {
+        const response = await getBiaya(id);
+        console.log('[fetch data biaya] : ', response);
+
+        if (response.error) {
+            return null;
+        }
+
+        return response.data;
+    }catch (error) {
+        console.error(error);
+        return null;
     }
-]
+}
 
 const fetchHunianData = async (): Promise<Hunian[]> => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(data)
-        }, 1000)
-    })
+    try {
+        const response = await getAllHunian();
+
+        if (response.error) {
+            return [];
+        }
+
+        return response.data as Hunian[];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
 }
 
 type TabKey = "all" | "kosong" | "terisi"
@@ -72,12 +69,14 @@ const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
 ]
 
 const statusStyles: Record<string, { badge: string; dot: string }> = {
-    Terisi: { badge: 'bg-rose-50 text-rose-700 border border-rose-200', dot: 'bg-rose-500' },
-    Kosong: { badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200', dot: 'bg-emerald-500' },
+    full: { badge: 'bg-rose-50 text-rose-700 border border-rose-200', dot: 'bg-rose-500' },
+    kosong: { badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200', dot: 'bg-emerald-500' },
 }
 
 const formatPrice = (price: number) =>
     `Rp ${price.toLocaleString('id-ID')}`
+
+
 
 export default function AdminHunian() {
     const [hunianList, setHunianList] = React.useState<Hunian[] | null>(null)
@@ -86,8 +85,28 @@ export default function AdminHunian() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await fetchHunianData()
-            setHunianList(data)
+            const response = await fetchHunianData()
+            // await Promise.all(data.map(async (hunian) => {
+            //     const biayaData = await fetchBiayaData(hunian.id.toString())
+            //     if (biayaData) {
+            //         hunian.total_price = biayaData.wifi + biayaData.sampah + biayaData.kost
+            //     }
+            // }))
+            const hunianList = response as Hunian[];
+
+            await Promise.all(
+                hunianList.map(async (hunian) => {
+                    const biayaData = await fetchBiayaData(hunian.id_hunian.toString());
+
+                    if (biayaData) {
+                        hunian.total_price = Number(biayaData.wifi) + Number(biayaData.sampah) + Number(biayaData.kost);
+                    }
+                })
+            );
+
+            // setHunianList(hunianList);
+            console.log('Fetched hunian data with biaya:', hunianList)
+            setHunianList(hunianList)
         }
         fetchData()
     }, [])
@@ -98,16 +117,16 @@ export default function AdminHunian() {
         let result = [...hunianList]
 
         if (activeTab === "kosong") {
-            result = result.filter(h => h.status === "Kosong")
+            result = result.filter(h => h.status_harian.toLowerCase() === "kosong")
         } else if (activeTab === "terisi") {
-            result = result.filter(h => h.status === "Terisi")
+            result = result.filter(h => h.status_harian.toLowerCase() === "full")
         }
 
         const q = searchQuery.toLowerCase().trim()
         if (q) {
             result = result.filter(h =>
-                h.name.toLowerCase().includes(q) ||
-                h.type.toLowerCase().includes(q)
+                h.nama_hunian.toLowerCase().includes(q) ||
+                h.tipe_hunian.toLowerCase().includes(q)
             )
         }
 
@@ -118,21 +137,21 @@ export default function AdminHunian() {
         if (!hunianList) return { all: 0, kosong: 0, terisi: 0 }
         return {
             all: hunianList.length,
-            kosong: hunianList.filter(h => h.status === "Kosong").length,
-            terisi: hunianList.filter(h => h.status === "Terisi").length,
+            kosong: hunianList.filter(h => h.status_harian.toLowerCase() === "kosong").length,
+            terisi: hunianList.filter(h => h.status_harian.toLowerCase() === "full").length,
         }
     }, [hunianList])
 
-    if (!hunianList) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="flex flex-col items-center gap-2">
-                    <div className="h-8 w-8 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
-                    <p className="text-sm text-gray-500">Memuat data hunian...</p>
-                </div>
-            </div>
-        )
-    }
+    // if (!hunianList) {
+    //     return (
+    //         <div className="flex items-center justify-center h-screen">
+    //             <div className="flex flex-col items-center gap-2">
+    //                 <div className="h-8 w-8 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
+    //                 <p className="text-sm text-gray-500">Memuat data hunian...</p>
+    //             </div>
+    //         </div>
+    //     )
+    // }
 
     return (
         <div className="min-h-screen bg-gray-50/50 p-6 md:p-8">
@@ -201,27 +220,27 @@ export default function AdminHunian() {
                 {filteredHunian.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {filteredHunian.map((hunian) => {
-                            const style = statusStyles[hunian.status] || { badge: 'bg-gray-100 text-gray-700', dot: 'bg-gray-500' }
+                            const style = statusStyles[hunian.status_harian.toLowerCase()] || { badge: 'bg-gray-100 text-gray-700', dot: 'bg-gray-500' }
                             return (
                                 <Card
-                                    key={hunian.id}
+                                    key={hunian.id_hunian}
                                     className="overflow-hidden border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-200 pt-0"
                                 >
                                     <CardHeader className="p-0">
                                         <div className="relative">
                                             <img
-                                                src={hunian.image_url}
-                                                alt={hunian.name}
+                                                src={hunian.gambar_hunian}
+                                                alt={hunian.nama_hunian}
                                                 className="w-full h-44 object-cover bg-gray-100"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                                             <span className={`absolute top-3 right-3 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${style.badge}`}>
                                                 <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
-                                                {hunian.status}
+                                                {hunian.status_harian}
                                             </span>
                                             <Badge className="absolute top-3 left-3 bg-white/90 text-gray-700 hover:bg-white/90 backdrop-blur-sm border-0 text-xs">
                                                 <BedDouble className="h-3 w-3 mr-1" />
-                                                {hunian.type}
+                                                {hunian.tipe_hunian}
                                             </Badge>
                                         </div>
                                     </CardHeader>
@@ -229,17 +248,17 @@ export default function AdminHunian() {
                                     <CardContent className="px-5 pb-5">
                                         <div className="flex items-start justify-between gap-2 mb-2">
                                             <CardTitle className="text-lg font-semibold text-gray-900">
-                                                {hunian.name}
+                                                {hunian.nama_hunian}
                                             </CardTitle>
                                         </div>
 
                                         <CardAction className="text-xs text-gray-500 mb-3 flex items-center gap-1">
                                             <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-300" />
-                                            Lantai 1 • {hunian.type}
+                                            Lantai 1 • {hunian.tipe_hunian}
                                         </CardAction>
 
                                         <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-                                            {hunian.description}
+                                            {hunian.deskripsi_hunian}
                                         </p>
 
                                         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
@@ -254,13 +273,13 @@ export default function AdminHunian() {
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Link href={`/admin/dashboard/hunian/${hunian.id}/edit`}>
+                                                <Link href={`/admin/dashboard/hunian/${hunian.id_hunian}/edit`}>
                                                     <Button size="sm" variant="outline" className="h-8 px-3 text-xs hover:bg-gray-100">
                                                         <Pencil className="h-3 w-3 mr-1" />
                                                         Edit
                                                     </Button>
                                                 </Link>
-                                                <Link href={`/admin/dashboard/hunian/${hunian.id}`}>
+                                                <Link href={`/admin/dashboard/hunian/${hunian.id_hunian}`}>
                                                     <Button size="sm" variant="outline" className="h-8 px-3 text-xs hover:bg-gray-100">
                                                         <Eye className="h-3 w-3 mr-1" />
                                                         Detail

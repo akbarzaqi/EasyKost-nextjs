@@ -2,7 +2,6 @@
 import React, { useState, useMemo, useEffect } from "react"
 import {
     Card,
-    CardAction,
     CardContent,
     CardHeader,
     CardTitle,
@@ -11,20 +10,13 @@ import { Button } from "@/components/ui/button"
 import { MdOutlineHomeWork, MdOutlinePersonOutline } from "react-icons/md"
 import { CgNotes } from "react-icons/cg"
 import { GoVerified } from "react-icons/go"
-import { Plus, FileText, TrendingUp } from "lucide-react"
+import { Plus, FileText, Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
-import { columns, data } from "./columns"
-import { DataTable } from "./data-table"
-
-import { useAuth } from "../../../../lib/hooks/useAuth"
-
-const getData = async (): Promise<{ columns: any[], data: any[] }> => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({ columns, data })
-        }, 1000)
-    })
-}
+import { getAllHunian } from "@/lib/api/hunian"
+import { getAllSewa } from "@/lib/api/sewa"
+import { getAllTagihan } from "@/lib/api/tagihan"
+import { getAllPembayaran } from "@/lib/api/pembayaran"
 
 type Stat = {
     title: string
@@ -35,69 +27,107 @@ type Stat = {
     iconColor: string
     description?: string
     highlight?: boolean
-    delta?: {
-        positive: boolean
-        value: string
-    }
+}
+
+const formatRupiah = (amount: number) => `Rp ${amount.toLocaleString('id-ID')}`
+
+const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-'
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 export default function AdminDashboard() {
-    const [columnsList, setColumnsList] = React.useState<any[] | null>(null)
-    const [dataList, setDataList] = React.useState<any[] | null>(null)
-
-    const { user } = useAuth()
-
-    console.log('Authenticated user in AdminDashboard:', user)
+    const router = useRouter()
+    const [loading, setLoading] = useState(true)
+    const [hunianCount, setHunianCount] = useState(0)
+    const [aktifCount, setAktifCount] = useState(0)
+    const [tagihanBulanIni, setTagihanBulanIni] = useState<any[]>([])
+    const [verifCount, setVerifCount] = useState(0)
+    const [recentTagihan, setRecentTagihan] = useState<any[]>([])
 
     useEffect(() => {
         const fetchData = async () => {
-            const { columns, data } = await getData()
-            setColumnsList(columns)
-            setDataList(data)
+            const [hunianRes, sewaRes, tagihanRes, pembayaranRes] = await Promise.all([
+                getAllHunian(),
+                getAllSewa(),
+                getAllTagihan(),
+                getAllPembayaran(),
+            ])
+
+            if (!hunianRes.error && hunianRes.data) {
+                setHunianCount(hunianRes.data.length)
+            }
+            if (!sewaRes.error && sewaRes.data) {
+                setAktifCount(sewaRes.data.filter((s: any) => s.status === 'aktif').length)
+            }
+            if (!tagihanRes.error && tagihanRes.data) {
+                const now = new Date()
+                const bulanIni = tagihanRes.data.filter((t: any) => {
+                    const d = new Date(t.tgl_tagihan)
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+                })
+                setTagihanBulanIni(bulanIni)
+
+                const sorted = [...tagihanRes.data].sort(
+                    (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                )
+                setRecentTagihan(sorted.slice(0, 10))
+            }
+            if (!pembayaranRes.error && pembayaranRes.data) {
+                setVerifCount(pembayaranRes.data.filter((p: any) => p.status === 'verif').length)
+            }
+            setLoading(false)
         }
         fetchData()
     }, [])
 
+    const totalTagihanBulanIni = useMemo(() => {
+        return tagihanBulanIni.reduce((sum, t) => {
+            const biaya = t.sewa?.hunian?.biaya
+            const total = (biaya ? Number(biaya.kost) + Number(biaya.wifi) + Number(biaya.sampah) : 0) + (Number(t.air) || 0)
+            return sum + total
+        }, 0)
+    }, [tagihanBulanIni])
+
     const stats: Stat[] = useMemo(() => [
         {
             title: "Total Hunian",
-            value: 10,
+            value: hunianCount,
             icon: <MdOutlineHomeWork />,
             iconBg: "bg-indigo-50",
             iconColor: "text-indigo-600",
         },
         {
             title: "Penghuni Aktif",
-            value: 10,
+            value: aktifCount,
             icon: <MdOutlinePersonOutline />,
             iconBg: "bg-emerald-50",
             iconColor: "text-emerald-600",
         },
         {
             title: "Tagihan Bulan Ini",
-            value: 10,
+            value: tagihanBulanIni.length,
+            suffix: `(${formatRupiah(totalTagihanBulanIni)})`,
             icon: <CgNotes />,
             iconBg: "bg-sky-50",
             iconColor: "text-sky-600",
         },
         {
             title: "Menunggu Verifikasi",
-            value: 3,
+            value: verifCount,
             icon: <GoVerified />,
             iconBg: "bg-rose-50",
             iconColor: "text-rose-600",
-            description: "butuh verifikasi",
-            highlight: true,
+            description: verifCount > 0 ? "butuh verifikasi" : undefined,
+            highlight: verifCount > 0,
         },
-    ], [])
+    ], [hunianCount, aktifCount, tagihanBulanIni, totalTagihanBulanIni, verifCount])
 
-    if (!columnsList || !dataList) {
+    if (loading) {
         return (
             <div className="flex items-center justify-center h-screen">
-                <div className="flex flex-col items-center gap-2">
-                    <div className="h-8 w-8 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
-                    <p className="text-sm text-gray-500">Memuat dashboard...</p>
-                </div>
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
             </div>
         )
     }
@@ -115,7 +145,10 @@ export default function AdminDashboard() {
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white">
+                        <Button
+                            onClick={() => router.push('/admin/dashboard/tagihan/tambah')}
+                            className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white cursor-pointer"
+                        >
                             <Plus className="h-4 w-4" />
                             Generate Tagihan
                         </Button>
@@ -146,21 +179,9 @@ export default function AdminDashboard() {
                                         {s.value}
                                     </div>
                                     {s.suffix && (
-                                        <span className="text-sm text-gray-500">{s.suffix}</span>
+                                        <span className="text-sm text-gray-500 truncate">{s.suffix}</span>
                                     )}
                                 </div>
-
-                                {s.delta && (
-                                    <div className="mt-2 flex items-center gap-1.5 text-xs">
-                                        <span className={`inline-flex items-center gap-0.5 font-medium ${
-                                            s.delta.positive ? "text-emerald-600" : "text-amber-600"
-                                        }`}>
-                                            <TrendingUp className={`h-3 w-3 ${s.delta.positive ? "" : "rotate-180"}`} />
-                                            {s.delta.value}
-                                        </span>
-                                    </div>
-                                )}
-
                                 {s.description && (
                                     <p className="mt-2 text-xs text-rose-600 font-medium">
                                         {s.description}
@@ -171,19 +192,79 @@ export default function AdminDashboard() {
                     ))}
                 </div>
 
+                {/* Recent Tagihan Table */}
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                     <div className="px-5 py-4 border-b border-gray-100">
-                        <div>
-                            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-gray-500" />
-                                Tagihan Terbaru
-                            </h2>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                                Daftar tagihan yang baru saja dibuat.
-                            </p>
-                        </div>
+                        <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-gray-500" />
+                            Tagihan Terbaru
+                        </h2>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            Daftar tagihan yang baru saja dibuat.
+                        </p>
                     </div>
-                    <DataTable columns={columns} data={data} />
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-gray-50/80 border-b border-gray-200">
+                                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Penghuni</th>
+                                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Kamar</th>
+                                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Bulan</th>
+                                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+                                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Jatuh Tempo</th>
+                                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {recentTagihan.length === 0 && (
+                                    <tr>
+                                        <td colSpan={6} className="px-5 py-8 text-center text-gray-500">
+                                            Belum ada tagihan.
+                                        </td>
+                                    </tr>
+                                )}
+                                {recentTagihan.map((t: any, i: number) => {
+                                    const user = t.sewa?.user
+                                    const hunian = t.sewa?.hunian
+                                    const biaya = hunian?.biaya
+                                    const total = (biaya ? Number(biaya.kost) + Number(biaya.wifi) + Number(biaya.sampah) : 0) + (Number(t.air) || 0)
+                                    const bulan = new Date(t.tgl_tagihan).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+                                    const now = new Date()
+                                    const jatuhTempo = new Date(t.tgl_jatuhtempo)
+                                    const isOverdue = t.status === 'notpaid' && jatuhTempo < now
+                                    const statusLabel = t.status === 'paid' ? 'Lunas' : isOverdue ? 'Jatuh Tempo' : 'Belum Bayar'
+                                    const statusBg = t.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : isOverdue ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                    const statusDot = t.status === 'paid' ? 'bg-emerald-500' : isOverdue ? 'bg-rose-500' : 'bg-amber-500'
+                                    return (
+                                        <tr key={t.id_tagihan || i} className={`border-b border-gray-100 hover:bg-gray-50/60 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
+                                            <td className="px-5 py-4">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-700 font-semibold text-xs flex-shrink-0">
+                                                        {(user?.nama || '?').charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <span className="font-medium text-gray-900">{user?.nama || '-'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-4">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                                    {hunian?.nama_hunian || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="px-5 py-4 text-gray-700">{bulan}</td>
+                                            <td className="px-5 py-4 font-semibold text-emerald-600">{formatRupiah(total)}</td>
+                                            <td className="px-5 py-4 text-gray-600">{formatDate(t.tgl_jatuhtempo)}</td>
+                                            <td className="px-5 py-4">
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusBg}`}>
+                                                    <span className={`h-1.5 w-1.5 rounded-full ${statusDot}`} />
+                                                    {statusLabel}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

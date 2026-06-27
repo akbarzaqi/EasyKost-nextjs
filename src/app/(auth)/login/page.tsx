@@ -5,39 +5,41 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import React from "react"
+import React, { Suspense } from "react"
 import { login } from "../../../lib/api/auth"
 import { useAuth } from "../../../lib/hooks/useAuth"
 import { useEffect } from "react"
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function Login() {
-
+function LoginForm() {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [errorMsg, setErrorMsg] = React.useState('');
 
   const { user, isLoading, loginUser } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (isLoading) return; // penting banget
+    if (isLoading) return;
 
     if (user) {
-      if (user.role === 'admin') {
+      const redirect = searchParams.get('redirect');
+      if (redirect) {
+        router.push(redirect);
+      } else if (user.role === 'admin') {
         router.push('/admin/dashboard');
       } else {
         router.push('/users/dashboard');
       }
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +59,7 @@ export default function Login() {
       setErrorMsg('Terjadi kesalahan, coba lagi nanti');
     }
   }
+
   if(!isLoading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -66,9 +69,6 @@ export default function Login() {
           <CardDescription className="mb-4">
             Manajement Kost Pak Aji
           </CardDescription>
-          {/* <CardAction>
-            <Button variant="link">Sign Up</Button>
-          </CardAction> */}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
@@ -117,5 +117,12 @@ export default function Login() {
       </div>
     )
   } 
+}
 
+export default function Login() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  )
 }

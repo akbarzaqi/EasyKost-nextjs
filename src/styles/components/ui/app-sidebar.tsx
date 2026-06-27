@@ -9,7 +9,9 @@ import {
   CreditCardIcon,
   UsersIcon,
   Building2,
+  UserCircle,
 } from "lucide-react"
+import { useAuth } from "../../../lib/hooks/useAuth"
 
 import {
   Sidebar,
@@ -29,6 +31,7 @@ const menuAdminItems = [
   { href: "/admin/dashboard/tagihan", icon: FileTextIcon, label: "Tagihan" },
   { href: "/admin/dashboard/pembayaran", icon: CreditCardIcon, label: "Pembayaran" },
   { href: "/admin/dashboard/pengguna", icon: UsersIcon, label: "Pengguna" },
+  { href: "/admin/dashboard/profile", icon: UserCircle, label: "Profil" },
 ]
 
 const menuUserItems = [
@@ -36,18 +39,16 @@ const menuUserItems = [
   { href: "/users/dashboard/kamar-saya", icon: HomeIcon, label: "Kamar Saya" },
   { href: "/users/dashboard/tagihan", icon: FileTextIcon, label: "Tagihan" },
   { href: "/users/dashboard/status", icon: GoVerified, label: "Status" },
+  { href: "/users/dashboard/profile", icon: UserCircle, label: "Profil" },
 ]
 
 
 export function AppSidebar() {
   const pathname = usePathname()
-  
-  console.log("Current Pathname:", pathname) 
+  const { user, isLoading } = useAuth()
 
   const isUserPage = pathname.startsWith("/users/")
   const isAdminPage = pathname.startsWith("/admin/")
-  console.log("Is User Page:", isUserPage)
-  console.log("Is Admin Page:", isAdminPage)
 
 
   const isActive = (href: string) => {
@@ -150,12 +151,14 @@ export function AppSidebar() {
       {/* Footer */}
       <SidebarFooter className="border-t border-gray-200 bg-white px-6 py-4">
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-semibold text-gray-600">WORKSPACE</div>
+          <div className="text-xs font-semibold text-gray-600">AKUN</div>
           <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
-            <div className="h-8 w-8 rounded-full bg-linear-to-br from-amber-400 to-orange-500" />
+            <div className="h-8 w-8 rounded-full bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold">
+              {user?.nama?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium text-gray-900 truncate">{isAdminPage ? "Admin User" : "Regular User"}</div>
-              <div className="text-xs text-gray-500 truncate">{isAdminPage ? "admin@kost.local" : "user@kost.local"}</div>
+              <div className="text-xs font-medium text-gray-900 truncate">{user?.nama || 'User'}</div>
+              <div className="text-xs text-gray-500 truncate">{user?.email || ''}</div>
             </div>
           </div>
         </div>
