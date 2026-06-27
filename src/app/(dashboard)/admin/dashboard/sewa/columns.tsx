@@ -57,7 +57,7 @@ function ActionButtons({ sewa, onStatusChange }: { sewa: Sewa; onStatusChange: (
             <div className="flex items-center gap-1.5">
                 <Button
                     size="sm"
-                    className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="h-8 px-3 text-xs bg-gray-900 hover:bg-gray-800 text-white"
                     onClick={() => handleAction('aktif')}
                     disabled={loading !== null}
                 >
@@ -129,7 +129,7 @@ export const columns = (onStatusChange: () => void) => [
             const user = getValue() as Sewa['user']
             return (
                 <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-700 font-semibold text-sm flex-shrink-0">
+                    <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold text-sm flex-shrink-0">
                         {user.nama.charAt(0).toUpperCase()}
                     </div>
                     <div>

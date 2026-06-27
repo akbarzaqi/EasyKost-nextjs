@@ -239,19 +239,19 @@ export default function AdminDashboard() {
                                         <tr key={t.id_tagihan || i} className={`border-b border-gray-100 hover:bg-gray-50/60 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
                                             <td className="px-5 py-4">
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-700 font-semibold text-xs flex-shrink-0">
+                                                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold text-xs flex-shrink-0">
                                                         {(user?.nama || '?').charAt(0).toUpperCase()}
                                                     </div>
                                                     <span className="font-medium text-gray-900">{user?.nama || '-'}</span>
                                                 </div>
                                             </td>
                                             <td className="px-5 py-4">
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
                                                     {hunian?.nama_hunian || '-'}
                                                 </span>
                                             </td>
                                             <td className="px-5 py-4 text-gray-700">{bulan}</td>
-                                            <td className="px-5 py-4 font-semibold text-emerald-600">{formatRupiah(total)}</td>
+                                            <td className="px-5 py-4 font-semibold text-gray-900">{formatRupiah(total)}</td>
                                             <td className="px-5 py-4 text-gray-600">{formatDate(t.tgl_jatuhtempo)}</td>
                                             <td className="px-5 py-4">
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusBg}`}>

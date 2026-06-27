@@ -183,7 +183,7 @@ export default function StatusPembayaranPage() {
                               <button
                                 onClick={() => handleVerifikasi(entry.id_pembayaran, 'paid')}
                                 disabled={verifLoading === entry.id_pembayaran}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors disabled:opacity-50"
                               >
                                 {verifLoading === entry.id_pembayaran ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -195,25 +195,25 @@ export default function StatusPembayaranPage() {
                               <button
                                 onClick={() => handleVerifikasi(entry.id_pembayaran, 'notpaid')}
                                 disabled={verifLoading === entry.id_pembayaran}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors disabled:opacity-50"
                               >
                                 <XCircle className="h-3.5 w-3.5" />
                                 Tolak
                               </button>
-                              <button onClick={() => router.push(`/admin/dashboard/pembayaran/${entry.invoice}`)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
+                              <button onClick={() => router.push(`/admin/dashboard/pembayaran/${entry.invoice}`)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
                                 <Eye className="h-3.5 w-3.5" />
                                 Lihat
                               </button>
                             </>
                           )}
                           {entry.status === "paid" && (
-                            <button onClick={() => router.push(`/admin/dashboard/pembayaran/${entry.invoice}`)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
+                            <button onClick={() => router.push(`/admin/dashboard/pembayaran/${entry.invoice}`)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
                               <Eye className="h-3.5 w-3.5" />
                               Lihat
                             </button>
                           )}
                           {entry.status === "notpaid" && (
-                            <button onClick={() => router.push(`/admin/dashboard/pembayaran/${entry.invoice}`)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
+                            <button onClick={() => router.push(`/admin/dashboard/pembayaran/${entry.invoice}`)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
                               <Eye className="h-3.5 w-3.5" />
                               Lihat
                             </button>

@@ -48,7 +48,7 @@ export const columns = [
     header: 'Kamar',
     accessorKey: 'kamar',
     cell: ({ getValue }: any) => (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
         {getValue() as string}
       </span>
     )
@@ -80,7 +80,7 @@ export const columns = [
     cell: ({ getValue }: any) => {
       const total = getValue() as number
       return (
-        <span className="font-semibold text-emerald-600">
+        <span className="font-semibold text-gray-900">
           Rp {total.toLocaleString('id-ID')}
         </span>
       )
