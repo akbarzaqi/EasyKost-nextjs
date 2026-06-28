@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { getImageUrl } from "@/lib/image"
 
 type Pembayaran = {
     id: number
@@ -19,7 +20,7 @@ export default function CardItem({ pembayaran }: { pembayaran: Pembayaran }) {
             <div className="flex items-center gap-6 flex-wrap">
                 <div className="relative w-24 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                     <img
-                        src={pembayaran.cover_image_url}
+                        src={getImageUrl(pembayaran.cover_image_url) || ''}
                         alt={pembayaran.nama}
                         className="w-full h-full object-cover"
                     />

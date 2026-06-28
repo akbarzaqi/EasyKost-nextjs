@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { BedDouble, Wallet, ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { getHunianById, deleteHunian } from '@/lib/api/hunian'
+import { getImageUrl } from '@/lib/image'
 
 type Biaya = {
   wifi: number
@@ -119,7 +120,7 @@ export default function HunianDetailClient({ id }: { id: string }) {
         <div className="relative rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-lg">
           <div className="relative h-72 md:h-96">
             <img
-              src={hunian.gambar_hunian || '/images/room1.jpg'}
+              src={getImageUrl(hunian.gambar_hunian) || '/images/room1.jpg'}
               alt={hunian.nama_hunian}
               className="w-full h-full object-cover"
             />

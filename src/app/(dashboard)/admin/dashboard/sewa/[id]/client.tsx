@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, User, Home, Calendar, Clock, FileText, Pencil, Wallet, CheckCircle2, XCircle, AlertCircle, Loader2, Phone, Mail, MapPin, Building2, Check, X, Briefcase, Receipt, Eye } from 'lucide-react'
 import { getSewaById, updateSewa } from '@/lib/api/sewa'
 import { getAllTagihan } from '@/lib/api/tagihan'
+import { getImageUrl } from '@/lib/image'
 
 const formatRupiah = (amount: number) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount)
@@ -271,9 +272,9 @@ export default function SewaDetailClient({ id }: { id: string }) {
                             <div className="mt-6 pt-6 border-t border-gray-100">
                                 <p className="text-xs text-gray-400 mb-2">Foto KTP</p>
                                 <div className="flex items-start gap-4">
-                                    <img src={user.foto} alt="KTP" className="max-w-xs rounded-lg border border-gray-200" />
+                                    <img src={getImageUrl(user.foto) || ''} alt="KTP" className="max-w-xs rounded-lg border border-gray-200" />
                                     <a
-                                        href={user.foto}
+                                        href={getImageUrl(user.foto) || '#'}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"

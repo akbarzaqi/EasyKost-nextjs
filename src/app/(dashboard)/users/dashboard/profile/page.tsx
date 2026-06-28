@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Camera, Loader2, CheckCircle, Image as ImageIcon } from "lucide-react"
+import { getImageUrl } from "@/lib/image"
 
 export default function ProfilePage() {
     const { user, loginUser } = useAuth()
@@ -156,7 +157,7 @@ export default function ProfilePage() {
                                 <div className="h-32 w-48 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
                                     {(user as any)?.foto ? (
                                         <img
-                                            src={(user as any).foto}
+                                            src={getImageUrl((user as any).foto) || ''}
                                             alt="KTP"
                                             className="h-full w-full object-cover"
                                         />

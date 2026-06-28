@@ -6,6 +6,7 @@ import { useAuth } from "../../../lib/hooks/useAuth"
 import { getPublicHunian } from "../../../lib/api/hunian"
 import { createSewa } from "../../../lib/api/sewa"
 import { Home, BedDouble, Wifi, Trash2, Wallet, ArrowLeft, Loader2, CheckCircle, AlertTriangle } from "lucide-react"
+import { getImageUrl } from "../../../lib/image"
 
 const formatPrice = (price: number) =>
     `Rp ${price.toLocaleString('id-ID')}`
@@ -214,7 +215,7 @@ export default function BookingPage() {
                             <div className="h-56 bg-gray-100">
                                 {hunian.gambar_hunian ? (
                                     <img
-                                        src={hunian.gambar_hunian}
+                                        src={getImageUrl(hunian.gambar_hunian) || ''}
                                         alt={hunian.nama_hunian}
                                         className="w-full h-full object-cover"
                                     />

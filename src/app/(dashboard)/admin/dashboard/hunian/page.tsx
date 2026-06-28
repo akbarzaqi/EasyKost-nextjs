@@ -16,6 +16,7 @@ import { Plus, Search, Home, CheckCircle2, XCircle, Pencil, Eye, BedDouble, Wall
 import Link from "next/link"
 import { getAllHunian } from "../../../../../lib/api/hunian"
 import { getBiaya } from "../../../../../lib/api/biaya"
+import { getImageUrl } from "../../../../../lib/image"
 
 type Hunian = {
     id_hunian: number,
@@ -229,7 +230,7 @@ export default function AdminHunian() {
                                     <CardHeader className="p-0">
                                         <div className="relative">
                                             <img
-                                                src={hunian.gambar_hunian}
+                                                src={getImageUrl(hunian.gambar_hunian) || ''}
                                                 alt={hunian.nama_hunian}
                                                 className="w-full h-44 object-cover bg-gray-100"
                                             />

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Download, CheckCircle2, XCircle, FileImage, Loader2 } from 'lucide-react'
 import { getPembayaranByInvoice, verifikasiPembayaran } from '@/lib/api/pembayaran'
+import { getImageUrl } from '@/lib/image'
 
 const formatRupiah = (amount: number) => `Rp ${amount.toLocaleString('id-ID')}`
 
@@ -96,7 +97,7 @@ export default function LihatBuktiClient({ id }: { id: string }) {
                   <h2 className="text-sm font-semibold text-gray-900">Bukti Pembayaran</h2>
                 </div>
                 <a
-                  href={pembayaran.bukti_trf}
+                  href={getImageUrl(pembayaran.bukti_trf) || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   download
@@ -109,7 +110,7 @@ export default function LihatBuktiClient({ id }: { id: string }) {
               </div>
               <div className="bg-gray-100 flex items-center justify-center p-4">
                 <img
-                  src={pembayaran.bukti_trf}
+                  src={getImageUrl(pembayaran.bukti_trf) || ''}
                   alt="Bukti Pembayaran"
                   className="w-full max-h-[500px] object-contain rounded-lg"
                 />

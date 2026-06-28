@@ -6,6 +6,7 @@ import Link from "next/link"
 import { getPublicHunian } from "../../../lib/api/hunian"
 import { useAuth } from "../../../lib/hooks/useAuth"
 import { Home, BedDouble, Wifi, Trash2, Wallet, MapPin, ArrowLeft, ChevronRight, Loader2 } from "lucide-react"
+import { getImageUrl } from "../../../lib/image"
 
 const formatPrice = (price: number) =>
     `Rp ${price.toLocaleString('id-ID')}`
@@ -144,7 +145,7 @@ export default function DetailHunianPage() {
                             <div className="h-72 md:h-96 bg-gray-100">
                                 {hunian.gambar_hunian ? (
                                     <img
-                                        src={hunian.gambar_hunian}
+                                        src={getImageUrl(hunian.gambar_hunian) || ''}
                                         alt={hunian.nama_hunian}
                                         className="w-full h-full object-cover"
                                     />

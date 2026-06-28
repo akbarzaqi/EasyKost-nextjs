@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Home, BedDouble, Wifi, Trash2, Wallet, MapPin, ChevronRight, LogIn, Loader2, Eye } from "lucide-react"
+import { getImageUrl } from "../lib/image"
 import { getPublicHunian } from "../lib/api/hunian"
 import { useAuth } from "../lib/hooks/useAuth"
 
@@ -149,7 +150,7 @@ export default function HomePage() {
                                 <div className="relative h-48 bg-gray-100 overflow-hidden">
                                     {hunian.gambar_hunian ? (
                                         <img
-                                            src={hunian.gambar_hunian}
+                                            src={getImageUrl(hunian.gambar_hunian) || ''}
                                             alt={hunian.nama_hunian}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />

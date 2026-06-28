@@ -21,6 +21,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/styles/components/ui
 import { Button } from "@/styles/components/ui/button";
 import { Badge } from "@/styles/components/ui/badge";
 import { getMySewa } from "@/lib/api/sewa";
+import { getImageUrl } from "@/lib/image";
 
 const formatRupiah = (amount: number) => `Rp ${amount.toLocaleString('id-ID')}`;
 
@@ -113,7 +114,7 @@ export default function KamarSayaPage() {
               <div className="relative h-56 md:h-72 bg-gray-200">
                 {hunian.gambar_hunian ? (
                   <img
-                    src={hunian.gambar_hunian}
+                    src={getImageUrl(hunian.gambar_hunian) || ''}
                     alt={hunian.nama_hunian}
                     className="w-full h-full object-cover"
                   />
