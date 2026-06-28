@@ -6,65 +6,17 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, Upload, BedDouble, Wallet, FileText, ImagePlus } from 'lucide-react'
+import { getHunianById, updateHunian } from '@/lib/api/hunian'
+import { updateBiaya } from '@/lib/api/biaya'
 
-type Hunian = {
-  id: number
-  name: string
-  harga_kost: number
-  harga_wifi: number
-  harga_air: number
-  total_price: number
-  type: string
-  status: string
-  description: string
-  image_url: string
+const statusLabel: Record<string, string> = {
+  kosong: 'Kosong',
+  full: 'Terisi',
 }
 
-const data: Hunian[] = [
-  {
-    id: 1,
-    name: 'Kamar A1',
-    harga_kost: 800000,
-    harga_wifi: 100000,
-    harga_air: 100000,
-    total_price: 1000000,
-    type: 'Premium Room',
-    status: 'Terisi',
-    description: 'Kamar dengan fasilitas lengkap dan nyaman untuk hunian jangka panjang.',
-    image_url: '/images/room1.jpg',
-  },
-  {
-    id: 2,
-    name: 'Kamar B2',
-    harga_kost: 550000,
-    harga_wifi: 100000,
-    harga_air: 100000,
-    total_price: 750000,
-    type: 'Standard Room',
-    status: 'Kosong',
-    description: 'Kamar dengan fasilitas standar yang cocok untuk hunian sementara.',
-    image_url: '/images/room1.jpg',
-  },
-  {
-    id: 3,
-    name: 'Kamar C3',
-    harga_kost: 300000,
-    harga_wifi: 100000,
-    harga_air: 100000,
-    total_price: 500000,
-    type: 'Economy Room',
-    status: 'Terisi',
-    description: 'Kamar dengan fasilitas dasar yang cocok untuk hunian dengan budget terbatas.',
-    image_url: '/images/room1.jpg',
-  },
-]
-
-const fetchHunianData = async (): Promise<Hunian[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(data)
-    }, 1000)
-  })
+const statusValue: Record<string, string> = {
+  Kosong: 'kosong',
+  Terisi: 'full',
 }
 
 const formatPrice = (price: number) => `Rp ${price.toLocaleString('id-ID')}`
@@ -73,6 +25,7 @@ export default function EditHunianClient({ id }: { id: string }) {
   const router = useRouter()
 
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [notFound, setNotFound] = useState(false)
   const [name, setName] = useState('')
   const [type, setType] = useState('')
@@ -87,19 +40,22 @@ export default function EditHunianClient({ id }: { id: string }) {
 
   useEffect(() => {
     const load = async () => {
-      const all = await fetchHunianData()
-      const found = all.find((h) => h.id === Number(id))
-      if (found) {
-        setName(found.name)
-        setType(found.type)
-        setStatus(found.status)
-        setHargaKost(String(found.harga_kost))
-        setHargaWifi(String(found.harga_wifi))
-        setHargaAir(String(found.harga_air))
-        setDescription(found.description)
-        setPreviewImage(found.image_url)
-      } else {
+      const result = await getHunianById(id)
+      if (result.error || !result.data) {
         setNotFound(true)
+        setLoading(false)
+        return
+      }
+      const h = result.data
+      setName(h.nama_hunian || '')
+      setType(h.tipe_hunian || '')
+      setStatus(statusLabel[h.status_harian] || 'Kosong')
+      setDescription(h.deskripsi_hunian || '')
+      setPreviewImage(h.gambar_hunian || '')
+      if (h.biaya) {
+        setHargaKost(String(Number(h.biaya.kost) || 0))
+        setHargaWifi(String(Number(h.biaya.wifi) || 0))
+        setHargaAir(String(Number(h.biaya.sampah) || 0))
       }
       setLoading(false)
     }
@@ -129,23 +85,39 @@ export default function EditHunianClient({ id }: { id: string }) {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
-    const total_price = Number(hargaKost) + Number(hargaWifi) + Number(hargaAir)
-    const updatedHunian = {
-      id: Number(id),
-      name,
-      type,
-      status,
-      harga_kost: Number(hargaKost),
-      harga_wifi: Number(hargaWifi),
-      harga_air: Number(hargaAir),
-      total_price,
-      description,
-      image_url: previewImage,
+
+    setSaving(true)
+
+    const hunianResult = await updateHunian(id, {
+      nama_hunian: name.trim(),
+      tipe_hunian: type.trim(),
+      status_harian: statusValue[status] || 'kosong',
+      gambar_hunian: imageFile,
+      deskripsi_hunian: description.trim(),
+    })
+
+    if (hunianResult.error) {
+      alert(hunianResult.message)
+      setSaving(false)
+      return
     }
-    console.log('Data hunian updated:', updatedHunian)
+
+    const biayaResult = await updateBiaya(id, {
+      wifi: Number(hargaWifi),
+      sampah: Number(hargaAir),
+      kost: Number(hargaKost),
+    })
+
+    if (biayaResult.error) {
+      alert('Hunian tersimpan, tetapi biaya gagal diperbarui: ' + biayaResult.message)
+      setSaving(false)
+      return
+    }
+
+    setSaving(false)
     router.push(`/admin/dashboard/hunian/${id}`)
   }
 
@@ -412,10 +384,11 @@ export default function EditHunianClient({ id }: { id: string }) {
                 <CardContent className="pt-6 space-y-3">
                   <button
                     type="submit"
-                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm"
+                    disabled={saving}
+                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-50"
                   >
                     <Wallet className="h-4 w-4" />
-                    Simpan Perubahan
+                    {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
                   </button>
                   <button
                     type="button"

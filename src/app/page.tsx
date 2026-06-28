@@ -193,10 +193,7 @@ export default function HomePage() {
                                                 </span>
                                             </>
                                         )}
-                                        <span className="flex items-center gap-1">
-                                            <MapPin className="h-3 w-3" />
-                                            Lantai 1
-                                        </span>
+
                                     </div>
 
                                     <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">

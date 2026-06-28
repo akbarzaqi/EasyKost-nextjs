@@ -58,7 +58,58 @@ const getPublicHunian = async () => {
     }
 }
 
-export { postHunian, getAllHunian, getPublicHunian };
+const getHunianById = async (id: string) => {
+    try {
+        const response = await fetchWithAccessToken(`/hunian/${id}`, {
+            method: 'GET',
+        });
+        return { error: false, data: response };
+    } catch (error) {
+        console.error('[api/hunian] Error fetching hunian by id:', error);
+        return { error: true, message: 'Gagal memuat data hunian' };
+    }
+}
+
+const updateHunian = async (id: string, data: {
+    nama_hunian: string;
+    tipe_hunian: string;
+    status_harian: string;
+    gambar_hunian?: File | null;
+    deskripsi_hunian?: string;
+}) => {
+    const formData = new FormData();
+    formData.append('nama_hunian', data.nama_hunian);
+    formData.append('tipe_hunian', data.tipe_hunian);
+    formData.append('status_harian', data.status_harian);
+    if (data.gambar_hunian) formData.append('gambar_hunian', data.gambar_hunian);
+    if (data.deskripsi_hunian) formData.append('deskripsi_hunian', data.deskripsi_hunian);
+    formData.append('_method', 'PUT');
+
+    try {
+        const response = await fetchWithAccessToken(`/hunian/${id}`, {
+            method: 'POST',
+            body: formData
+        });
+        return { error: false, message: 'Hunian berhasil diperbarui', data: response.data };
+    } catch (error) {
+        console.error('[api/hunian] Error updating hunian:', error);
+        return { error: true, message: 'Gagal memperbarui hunian' };
+    }
+}
+
+const deleteHunian = async (id: string) => {
+    try {
+        await fetchWithAccessToken(`/hunian/${id}`, {
+            method: 'DELETE',
+        });
+        return { error: false, message: 'Hunian berhasil dihapus' };
+    } catch (error) {
+        console.error('[api/hunian] Error deleting hunian:', error);
+        return { error: true, message: 'Gagal menghapus hunian' };
+    }
+}
+
+export { postHunian, getAllHunian, getPublicHunian, getHunianById, updateHunian, deleteHunian };
 
 
 

@@ -30,6 +30,22 @@ const getBiaya = async (id: string) => {
     }
 }
 
-export { postBiaya, getBiaya };
+const updateBiaya = async (id: string, data: { wifi: number; sampah: number; kost: number;}) => {
+    try {
+        const response = await fetchWithAccessToken(`/hunian/${id}/biaya/`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        return { error: false, message: 'Biaya berhasil diperbarui', data: response };
+    } catch (error) {
+        console.error('[api/biaya] Error updating biaya:', error);
+        return { error: true, message: 'Gagal memperbarui biaya' };
+    }
+}
+
+export { postBiaya, getBiaya, updateBiaya };
 
 

@@ -254,7 +254,7 @@ export default function AdminHunian() {
 
                                         <CardAction className="text-xs text-gray-500 mb-3 flex items-center gap-1">
                                             <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-300" />
-                                            Lantai 1 • {hunian.tipe_hunian}
+{hunian.tipe_hunian}
                                         </CardAction>
 
                                         <p className="text-sm text-gray-600 line-clamp-2 mb-4">

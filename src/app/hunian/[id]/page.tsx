@@ -166,10 +166,6 @@ export default function DetailHunianPage() {
                                             {hunian.tipe_hunian}
                                         </span>
                                         <span className="text-gray-300">|</span>
-                                        <span className="inline-flex items-center gap-1 text-sm text-gray-500">
-                                            <MapPin className="h-4 w-4" />
-                                            Lantai 1
-                                        </span>
                                     </div>
                                 </div>
                                 <span
