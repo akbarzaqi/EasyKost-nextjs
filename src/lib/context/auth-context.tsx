@@ -9,6 +9,12 @@ interface User {
     username: string;
     email: string;
     no_hp: string;
+    pekerjaan?: string;
+    provinsi?: string;
+    kabupaten?: string;
+    kecamatan?: string;
+    alamat?: string;
+    foto?: string;
     role: "admin" | "user";
 }
 

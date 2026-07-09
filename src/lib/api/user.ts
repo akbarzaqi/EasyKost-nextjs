@@ -18,9 +18,13 @@ const updateProfile = async (data: {
                 'Content-Type': 'application/json',
             },
         });
+        if (!response) {
+            return { error: true, message: 'Gagal terhubung ke server, silakan coba lagi' };
+        }
         return { error: false, message: response.message || 'Profil berhasil diperbarui', data: response.data };
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Gagal memperbarui profil';
+        console.error('[updateProfile] Error:', message);
         return { error: true, message };
     }
 }
@@ -34,6 +38,9 @@ const updateFoto = async (file: File) => {
             method: 'POST',
             body: formData,
         });
+        if (!response) {
+            return { error: true, message: 'Gagal terhubung ke server, silakan coba lagi' };
+        }
         return { error: false, message: response.message || 'Foto berhasil diperbarui', data: response.data };
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Gagal memperbarui foto';

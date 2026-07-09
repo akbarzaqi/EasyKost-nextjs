@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Home, Wifi, Bolt, Droplet, CheckCircle, Loader2, FileText, CreditCard } from "lucide-react";
+import { Home, User, CheckCircle, Loader2, FileText, CreditCard } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/styles/components/ui/card";
 import { Button } from "@/styles/components/ui/button";
 import { Badge } from "@/styles/components/ui/badge";
@@ -244,7 +244,7 @@ export default function Dashboard() {
                   className="p-4 bg-gray-50 rounded-xl border border-gray-100 text-center hover:border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   <div className="p-2 bg-white rounded-lg border border-gray-100 inline-flex mb-3">
-                    <Wifi className="h-5 w-5 text-gray-600" aria-hidden="true" />
+                    <User className="h-5 w-5 text-gray-600" aria-hidden="true" />
                   </div>
                   <p className="text-xs text-gray-500 mb-1">Profil</p>
                   <p className="font-semibold text-gray-900 text-sm">Edit Profil</p>

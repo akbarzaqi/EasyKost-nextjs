@@ -128,7 +128,7 @@ export default function BookingPage() {
                         Sebelum melakukan booking, Anda harus melengkapi data diri terlebih dahulu.
                     </p>
                     <button
-                        onClick={() => router.push(`/users/dashboard/profile`)}
+                        onClick={() => router.push(`/users/dashboard/profile?redirect=/sewa/${params.id}`)}
                         className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors"
                     >
                         Lengkapi Data Diri

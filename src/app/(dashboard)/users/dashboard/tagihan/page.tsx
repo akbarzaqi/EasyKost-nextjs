@@ -34,6 +34,15 @@ function InvoiceCard({ tagihan, onBayar, onLihat }: { tagihan: any; onBayar: (id
   const biayaAir = Number(tagihan.air) || 0;
   const total = biayaKost + biayaWifi + biayaSampah + biayaAir;
   const isUnpaid = tagihan.status === "notpaid";
+  const isVerif = tagihan.status === "verif";
+
+  const getStatusBadge = () => {
+    if (isVerif) return { label: "Verifikasi", bg: "bg-amber-50 text-amber-700 border-amber-100", dot: "bg-amber-500" };
+    if (isUnpaid) return { label: "Belum Bayar", bg: "bg-red-50 text-red-600 border-red-100", dot: "bg-red-500" };
+    return { label: "Lunas", bg: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" };
+  };
+
+  const statusBadge = getStatusBadge();
 
   const bulan = new Date(tagihan.tgl_tagihan).toLocaleDateString('id-ID', {
     month: 'long', year: 'numeric'
@@ -68,19 +77,13 @@ function InvoiceCard({ tagihan, onBayar, onLihat }: { tagihan: any; onBayar: (id
             </p>
           </div>
           <Badge
-            className={`gap-1.5 px-2.5 py-1 text-xs ${
-              isUnpaid
-                ? "bg-red-50 text-red-600 border-red-100"
-                : "bg-gray-100 text-gray-600 border-gray-200"
-            }`}
+            className={`gap-1.5 px-2.5 py-1 text-xs ${statusBadge.bg}`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                isUnpaid ? "bg-red-500" : "bg-gray-400"
-              }`}
+              className={`w-1.5 h-1.5 rounded-full ${statusBadge.dot}`}
               aria-hidden="true"
             />
-            {isUnpaid ? "Belum Bayar" : "Lunas"}
+            {statusBadge.label}
           </Badge>
         </div>
       </CardHeader>
@@ -210,6 +213,7 @@ export default function TagihanPage() {
   }, 0);
 
   const totalLunas = tagihanList.filter((t) => t.status === "paid").length;
+  const totalVerif = tagihanList.filter((t) => t.status === "verif").length;
   const totalBelum = tagihanList.filter((t) => t.status === "notpaid").length;
 
   const totalBelumNominal = tagihanList
@@ -274,7 +278,7 @@ export default function TagihanPage() {
         </div>
 
         {/* Status Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-gray-100 rounded-lg">
@@ -301,6 +305,17 @@ export default function TagihanPage() {
             <div className="flex items-center gap-3">
               <div className="p-2 bg-amber-50 rounded-lg">
                 <Clock className="h-5 w-5 text-amber-600" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Verifikasi</p>
+                <p className="text-lg font-bold text-gray-900">{totalVerif} tagihan</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-rose-50 rounded-lg">
+                <Clock className="h-5 w-5 text-rose-600" aria-hidden="true" />
               </div>
               <div>
                 <p className="text-xs text-gray-500">Belum Dibayar</p>

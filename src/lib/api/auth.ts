@@ -84,13 +84,13 @@ const fetchWithAccessToken = async (url: string, options: RequestInit = {}) => {
     if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 301) {
         clearLocalStorageItem();
         window.location.href = '/login';
-        return;
+        throw new Error('Sesi berakhir, silakan login ulang');
     }
 
     if (response.status === 401) {
         clearLocalStorageItem();
         window.location.href = '/login';
-        return;
+        throw new Error('Sesi berakhir, silakan login ulang');
     }
 
     if (!response.ok) {

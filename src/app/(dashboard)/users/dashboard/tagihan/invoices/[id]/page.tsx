@@ -65,7 +65,16 @@ export default function InvoiceDetailPage() {
   const biayaAir = Number(tagihan.air) || 0;
   const total = biayaKost + biayaWifi + biayaSampah + biayaAir;
   const isPaid = tagihan.status === "paid";
+  const isVerif = tagihan.status === "verif";
   const transaksi = tagihan.transaksi;
+
+  const getStatusBadge = () => {
+    if (isPaid) return { label: "Lunas", bg: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+    if (isVerif) return { label: "Verifikasi", bg: "bg-amber-50 text-amber-700 border-amber-200" };
+    return { label: "Belum Bayar", bg: "bg-red-50 text-red-600 border-red-100" };
+  };
+
+  const statusBadge = getStatusBadge();
 
   const bulan = new Date(tagihan.tgl_tagihan).toLocaleDateString('id-ID', {
     month: 'long', year: 'numeric'
@@ -91,9 +100,9 @@ export default function InvoiceDetailPage() {
                   {bulan}
                 </CardTitle>
               </div>
-              <Badge className={`gap-1.5 px-3 py-1 ${isPaid ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-600 border-red-100"}`}>
+              <Badge className={`gap-1.5 px-3 py-1 ${statusBadge.bg}`}>
                 <CheckCircle className="h-3.5 w-3.5" />
-                {isPaid ? "Lunas" : "Belum Bayar"}
+                {statusBadge.label}
               </Badge>
             </div>
           </CardHeader>
@@ -113,8 +122,8 @@ export default function InvoiceDetailPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Status</p>
-                <p className={`font-semibold mt-0.5 ${isPaid ? "text-green-600" : "text-red-600"}`}>
-                  {isPaid ? "Dibayar" : "Belum Dibayar"}
+                <p className={`font-semibold mt-0.5 ${isPaid ? "text-emerald-600" : isVerif ? "text-amber-600" : "text-red-600"}`}>
+                  {isPaid ? "Lunas" : isVerif ? "Sedang Diverifikasi" : "Belum Dibayar"}
                 </p>
               </div>
             </div>
@@ -152,7 +161,7 @@ export default function InvoiceDetailPage() {
               </div>
             </div>
           </CardContent>
-          {isPaid && transaksi && (
+          {(isPaid || isVerif) && transaksi && (
             <CardFooter className="flex-col gap-3 border-t border-gray-100">
               <div className="flex items-center gap-3 w-full p-3 bg-gray-50 rounded-lg">
                 <div className="p-1.5 bg-white rounded-lg border border-gray-100">
@@ -163,6 +172,11 @@ export default function InvoiceDetailPage() {
                   {transaksi.invoice && <> (Invoice: {transaksi.invoice})</>}
                 </p>
               </div>
+              {isVerif && (
+                <p className="text-xs text-amber-600 font-medium">
+                  Pembayaran sedang diverifikasi oleh admin. Mohon tunggu 1x24 jam.
+                </p>
+              )}
             </CardFooter>
           )}
         </Card>

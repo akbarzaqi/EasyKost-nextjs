@@ -1,20 +1,25 @@
 'use client'
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { updateProfile, updateFoto } from "@/lib/api/user"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Camera, Loader2, CheckCircle, Image as ImageIcon } from "lucide-react"
+import { Camera, Loader2, CheckCircle, Image as ImageIcon, ArrowLeft } from "lucide-react"
 import { getImageUrl } from "@/lib/image"
 
 export default function ProfilePage() {
+    const router = useRouter()
+    const searchParams = useSearchParams()
     const { user, loginUser } = useAuth()
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState("")
     const [error, setError] = useState("")
+    const [saved, setSaved] = useState(false)
+    const initialized = useRef(false)
 
     const [form, setForm] = useState({
         nama: "",
@@ -28,7 +33,8 @@ export default function ProfilePage() {
     })
 
     useEffect(() => {
-        if (user) {
+        if (user && !initialized.current) {
+            initialized.current = true
             setForm({
                 nama: user.nama || "",
                 email: user.email || "",
@@ -60,6 +66,7 @@ export default function ProfilePage() {
             setError(response.message)
         } else {
             setSuccess("Profil berhasil diperbarui")
+            setSaved(true)
             if (response.data) {
                 loginUser(
                     localStorage.getItem('token') || '',
@@ -194,16 +201,29 @@ export default function ProfilePage() {
                             <div className="text-sm text-red-500 bg-red-50 rounded-lg px-4 py-2.5">{error}</div>
                         )}
 
-                        <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-                            {loading ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Menyimpan...
-                                </>
-                            ) : (
-                                "Simpan Perubahan"
+                        <div className="flex items-center gap-3">
+                            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Menyimpan...
+                                    </>
+                                ) : (
+                                    "Simpan Perubahan"
+                                )}
+                            </Button>
+                            {saved && searchParams.get('redirect') && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => router.push(searchParams.get('redirect')!)}
+                                    className="cursor-pointer"
+                                >
+                                    <ArrowLeft className="h-4 w-4 mr-2" />
+                                    Kembali ke Booking
+                                </Button>
                             )}
-                        </Button>
+                        </div>
                     </form>
                 </CardContent>
             </Card>
