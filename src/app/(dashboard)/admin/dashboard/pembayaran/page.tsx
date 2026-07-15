@@ -52,7 +52,9 @@ export default function StatusPembayaranPage() {
     })
   }, [searchQuery, pembayaranList])
 
-  const totalTagihan = pembayaranList.reduce((sum, p) => sum + (Number(p.transaksi?.total_bayar) || 0), 0)
+  const totalTagihan = pembayaranList
+    .filter((p) => p.status === "paid")
+    .reduce((sum, p) => sum + (Number(p.transaksi?.total_bayar) || 0), 0)
   const menungguVerifikasi = pembayaranList.filter((p) => p.status === "verif").length
   const totalDiterima = pembayaranList.filter((p) => p.status === "paid").length
 
