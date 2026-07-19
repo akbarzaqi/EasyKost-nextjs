@@ -130,18 +130,29 @@ export default function HomePage() {
 
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-3">
-              <button
-                onClick={() => router.push('/login')}
-                className="px-5 py-2 text-sm font-medium text-black hover:text-gray-900 transition-colors"
-              >
-                Masuk
-              </button>
-              <button
-                onClick={() => router.push('/register')}
-                className="px-5 py-2 text-sm font-medium text-white bg-black rounded-xl hover:bg-gray-800 transition-colors shadow-sm hover:shadow-md"
-              >
-                Daftar
-              </button>
+              {user ? (
+                <button
+                  onClick={() => router.push(user.role === 'admin' ? '/admin/dashboard' : '/users/dashboard')}
+                  className="px-5 py-2 text-sm font-medium text-white bg-black rounded-xl hover:bg-gray-800 transition-colors shadow-sm hover:shadow-md"
+                >
+                  Dashboard
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => router.push('/login')}
+                    className="px-5 py-2 text-sm font-medium text-black hover:text-gray-900 transition-colors"
+                  >
+                    Masuk
+                  </button>
+                  <button
+                    onClick={() => router.push('/register')}
+                    className="px-5 py-2 text-sm font-medium text-white bg-black rounded-xl hover:bg-gray-800 transition-colors shadow-sm hover:shadow-md"
+                  >
+                    Daftar
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -169,18 +180,29 @@ export default function HomePage() {
                   </Link>
                 ))}
                 <div className="flex flex-col gap-2 pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => { router.push('/login'); setMobileMenuOpen(false); }}
-                    className="px-4 py-2 text-base font-medium text-black hover:text-gray-900 text-left"
-                  >
-                    Masuk
-                  </button>
-                  <button
-                    onClick={() => { router.push('/register'); setMobileMenuOpen(false); }}
-                    className="px-4 py-2 text-base font-medium text-white bg-black rounded-xl"
-                  >
-                    Daftar
-                  </button>
+                  {user ? (
+                    <button
+                      onClick={() => { router.push(user.role === 'admin' ? '/admin/dashboard' : '/users/dashboard'); setMobileMenuOpen(false); }}
+                      className="px-4 py-2 text-base font-medium text-white bg-black rounded-xl"
+                    >
+                      Dashboard
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => { router.push('/login'); setMobileMenuOpen(false); }}
+                        className="px-4 py-2 text-base font-medium text-black hover:text-gray-900 text-left"
+                      >
+                        Masuk
+                      </button>
+                      <button
+                        onClick={() => { router.push('/register'); setMobileMenuOpen(false); }}
+                        className="px-4 py-2 text-base font-medium text-white bg-black rounded-xl"
+                      >
+                        Daftar
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
