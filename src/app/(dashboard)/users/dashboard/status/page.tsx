@@ -86,21 +86,21 @@ export default function StatusPage() {
             </div>
           </div>
           <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
-            <div className="p-2 bg-rose-50 rounded-lg">
-              <Clock className="h-5 w-5 text-rose-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Belum Dibayar</p>
-              <p className="text-lg font-bold text-gray-900">{totalBelum} tagihan</p>
-            </div>
-          </div>
-          <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
             <div className="p-2 bg-blue-50 rounded-lg">
               <AlertTriangle className="h-5 w-5 text-blue-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">Verifikasi</p>
               <p className="text-lg font-bold text-gray-900">{totalVerif} tagihan</p>
+            </div>
+          </div>
+          <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
+            <div className="p-2 bg-rose-50 rounded-lg">
+              <Clock className="h-5 w-5 text-rose-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Belum Dibayar</p>
+              <p className="text-lg font-bold text-gray-900">{totalBelum} tagihan</p>
             </div>
           </div>
         </div>

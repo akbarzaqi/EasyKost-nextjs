@@ -1,4 +1,5 @@
 'use client';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const translateValidation = (msg: string): string => {
@@ -17,7 +18,6 @@ const translateValidation = (msg: string): string => {
     for (const [en, id] of Object.entries(map)) {
         if (msg.toLowerCase().includes(en.toLowerCase())) return id;
     }
-    // Capitalize common patterns
     return msg
         .replace(/^The /, '')
         .replace(/ field is required/g, ' wajib diisi')
@@ -25,7 +25,6 @@ const translateValidation = (msg: string): string => {
         .replace(/ must be at least (\d+) characters\.?/g, ' minimal $1 karakter')
         .replace(/ confirmation does not match\.?/g, ' tidak cocok');
 }
-
 
 const fieldLabels: Record<string, string> = {
     username: 'Username',
@@ -43,52 +42,23 @@ const formatErrors = (errors: Record<string, string[]>): string =>
         })
         .join(', ');
 
-const setLocalStorageItem = (key: string, value: string) => {
-    try {
-        localStorage.setItem(key, value);
-    } catch (error) {
-        console.error(`Error setting localStorage item ${key}:`, error);
-    }
-}
-
-const clearLocalStorageItem = () => {
-    try {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-    } catch (error) {
-        console.error('Error removing localStorage items:', error);
-    }
-}
-
 const fetchWithAccessToken = async (url: string, options: RequestInit = {}) => {
-    
-    
-
-    const accessToken = localStorage.getItem('token');
-    if (!accessToken) {
-        throw new Error('No access token found');
+    const headers: Record<string, string> = {
+        'Accept': 'application/json',
+    };
+    if (options.headers) {
+        Object.assign(headers, options.headers);
+    }
+    if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
     }
 
-    const headers = {
-        'Accept': 'application/json',
-        ...options.headers,
-        'Authorization': `Bearer ${accessToken}`,
-    };
-
-    const response = await fetch(`${API_URL}${url}`, {
+    const response = await fetch(`/api/proxy${url}`, {
         ...options,
         headers,
-        redirect: 'manual',
     });
 
-    if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 301) {
-        clearLocalStorageItem();
-        window.location.href = '/login';
-        throw new Error('Sesi berakhir, silakan login ulang');
-    }
-
     if (response.status === 401) {
-        clearLocalStorageItem();
         window.location.href = '/login';
         throw new Error('Sesi berakhir, silakan login ulang');
     }
@@ -138,9 +108,7 @@ const fetchWithoutAccessToken = async (url: string, options: RequestInit = {}) =
     return data;
 }
 
-
-const register = async (data: { nama : string; username: string; email: string; password: string; password_confirmation: string; no_hp: string }) => {
-    console.log('[api/auth] Registering user with data:', data);
+const register = async (data: { nama: string; username: string; email: string; password: string; password_confirmation: string; no_hp: string }) => {
     return await fetchWithoutAccessToken('/register', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -148,26 +116,29 @@ const register = async (data: { nama : string; username: string; email: string; 
 }
 
 const login = async (data: { username: string; password: string }) => {
-    console.log('[api/auth] Logging in user with data:', data);
-
     try {
-        const response = await fetchWithoutAccessToken('/login', {
+        const response = await fetch('/api/auth/login', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
-        return { error: false, data: response, message: '' };
+        const result = await response.json();
+        if (!response.ok) {
+            return { error: true, data: null, message: result.message || 'Login gagal' };
+        }
+        return { error: false, data: result, message: '' };
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Login gagal';
         return { error: true, data: null, message };
     }
 }
-    
+
 const logoutUser = async () => {
     try {
-        await fetchWithAccessToken('/logout', { method: 'POST' });
+        await fetch('/api/auth/logout', { method: 'POST' });
     } catch (err) {
         console.error('Logout API error:', err);
     }
 }
 
-export { fetchWithAccessToken, fetchWithoutAccessToken, register, login, logoutUser, setLocalStorageItem };
+export { fetchWithAccessToken, fetchWithoutAccessToken, register, login, logoutUser };

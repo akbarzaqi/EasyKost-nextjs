@@ -1,6 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-import { setLocalStorageItem, fetchWithAccessToken, fetchWithoutAccessToken } from './auth';
+import { fetchWithAccessToken, fetchWithoutAccessToken } from './auth';
 
 const postHunian = async (data: {
     nama_hunian: string;

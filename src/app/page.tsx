@@ -13,7 +13,6 @@ import {
   ChevronRight, 
   LogIn, 
   Loader2, 
-  Eye,
   Check,
   Building2,
   Shield,
@@ -210,8 +209,7 @@ export default function HomePage() {
               </h1>
 
               <p className="mt-6 text-lg lg:text-xl text-gray-600 leading-relaxed max-w-xl">
-                Kamar nyaman dengan fasilitas lengkap, lokasi strategis dekat kampus, 
-                dan harga bulanan terjangkau mulai Rp850.000/bulan.
+                Kamar nyaman dengan fasilitas lengkap, lokasi strategis dekat berbagai kebutuhan, serta harga bulanan yang terjangkau. Nikmati lingkungan yang bersih, aman, dan nyaman untuk mendukung aktivitas belajar maupun bekerja setiap hari.
               </p>
 
 {/* Features */}
@@ -300,13 +298,13 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-100 text-black rounded-full text-sm font-medium mb-4">
-              Kamar Tersedia
+              Semua Kamar
             </span>
             <h2 className="text-3xl lg:text-4xl font-bold text-black leading-tight">
-              Kamar Siap untuk Anda
+              Daftar Kamar
             </h2>
             <p className="mt-4 text-lg text-black">
-              {availableRooms.length} kamar nyaman tersedia dengan fasilitas lengkap
+              {hunianList.length} kamar dengan fasilitas lengkap
             </p>
           </div>
 
@@ -324,116 +322,103 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          ) : availableRooms.length === 0 ? (
+          ) : hunianList.length === 0 ? (
             <div className="text-center py-20">
               <Home className="h-16 w-16 text-black mx-auto mb-6" />
-              <h3 className="text-xl font-semibold text-black mb-2">Tidak Ada Kamar Tersedia</h3>
-              <p className="text-black">Semua kamar sedang terisi. Cek kembali nanti!</p>
+              <h3 className="text-xl font-semibold text-black mb-2">Belum Ada Kamar</h3>
+              <p className="text-black">Belum ada kamar yang tersedia saat ini.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {availableRooms.map((hunian) => (
+            <div className="flex flex-col gap-4">
+              {hunianList.map((hunian) => {
+                const isAvailable = hunian.status_harian.toLowerCase() === "kosong"
+                return (
                 <article
                   key={hunian.id_hunian}
-                  className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:border-blue-100 transition-all duration-300"
+                  className={`group bg-white rounded-2xl border overflow-hidden transition-all duration-300 ${isAvailable ? 'border-gray-100 hover:shadow-xl hover:border-blue-100' : 'border-rose-100 bg-rose-50/30 opacity-75'}`}
                 >
-                  <div className="relative h-48 bg-gray-100 overflow-hidden">
-                    {hunian.gambar_hunian ? (
-                      <img
-                        src={getImageUrl(hunian.gambar_hunian) || ''}
-                        alt={hunian.nama_hunian}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-                        <BedDouble className="h-14 w-14 text-blue-300" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-navy-900/40 via-transparent to-transparent" />
-                    <div className="absolute top-3 left-3 right-3 flex justify-between">
-                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500/90 backdrop-blur-sm text-white text-xs font-medium rounded-full">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-                        Tersedia
-                      </span>
-                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/90 backdrop-blur-sm text-navy-900 text-xs font-medium rounded-full">
-                        <BedDouble className="h-3 w-3" />
-                        {hunian.tipe_hunian}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <Link href={`/hunian/${hunian.id_hunian}`} className="block">
-                      <h3 className="text-lg font-semibold text-black group-hover:text-black transition-colors">
-                        {hunian.nama_hunian}
-                      </h3>
-                    </Link>
-
-                    <p className="mt-3 text-sm text-black line-clamp-2">
-                      {hunian.deskripsi_hunian || "Kamar nyaman dengan fasilitas lengkap untuk kebutuhan sehari-hari Anda."}
-                    </p>
-
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      {hunian.biaya && (
-                        <>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg">
-                            <Wifi className="h-3 w-3" />
-                            WiFi Termasuk
-                          </span>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-medium rounded-lg">
-                            <Trash2 className="h-3 w-3" />
-                            Layanan Kebersihan
-                          </span>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-lg">
-                            <Shield className="h-3 w-3" />
-                            Keamanan 24 Jam
-                          </span>
-                        </>
+                  <div className="flex flex-col md:flex-row">
+                    <div className={`relative ${isAvailable ? 'md:w-72 h-48' : 'w-full h-32'} bg-gray-100 overflow-hidden flex-shrink-0`}>
+                      {hunian.gambar_hunian ? (
+                        <img
+                          src={getImageUrl(hunian.gambar_hunian) || ''}
+                          alt={hunian.nama_hunian}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+                          <BedDouble className="h-14 w-14 text-blue-300" />
+                        </div>
                       )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-navy-900/40 via-transparent to-transparent" />
+                      <div className="absolute top-3 left-3 right-3 flex justify-between">
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 backdrop-blur-sm text-white text-xs font-medium rounded-full ${isAvailable ? 'bg-emerald-500/90' : 'bg-rose-500/90'}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${isAvailable ? 'bg-emerald-300' : 'bg-rose-300'}`} />
+                          {isAvailable ? 'Tersedia' : 'Penuh'}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/90 backdrop-blur-sm text-navy-900 text-xs font-medium rounded-full">
+                          <BedDouble className="h-3 w-3" />
+                          {hunian.tipe_hunian}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="mt-6 pt-6 border-t border-gray-200 flex items-center justify-between">
+                    <div className="p-4 md:p-5 flex-1 flex flex-col justify-between">
                       <div>
-                        <p className="text-xs text-gray-500">Mulai dari</p>
-                        <p className="text-2xl font-bold text-black">
-                          {formatPrice(hunian.total_price)}
-                          <span className="text-base font-normal text-gray-400">/bulan</span>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/hunian/${hunian.id_hunian}`}
-                          className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-black bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
-                        >
-                          <Eye className="h-4 w-4" />
-                          Detail
+                        <Link href={`/hunian/${hunian.id_hunian}`} className="block">
+                          <h3 className="text-lg font-semibold text-black transition-colors">
+                            {hunian.nama_hunian}
+                          </h3>
                         </Link>
+
+                        <p className="mt-1 text-sm text-black line-clamp-2">
+                          {hunian.deskripsi_hunian || "Kamar nyaman dengan fasilitas lengkap untuk kebutuhan sehari-hari Anda."}
+                        </p>
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {hunian.biaya && (
+                            <>
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg">
+                                <Wifi className="h-3 w-3" />
+                                WiFi Termasuk
+                              </span>
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-medium rounded-lg">
+                                <Trash2 className="h-3 w-3" />
+                                Layanan Kebersihan
+                              </span>
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-lg">
+                                <Shield className="h-3 w-3" />
+                                Keamanan 24 Jam
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-500">Mulai dari</p>
+                          <p className="text-2xl font-bold text-black">
+                            {formatPrice(hunian.total_price)}
+                            <span className="text-base font-normal text-gray-400">/bulan</span>
+                          </p>
+                        </div>
                         <button
                           onClick={() => handleBooking(hunian.id_hunian)}
-                          className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-black text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-sm hover:shadow-md"
+                          disabled={!isAvailable}
+                          className={`inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium rounded-xl shadow-sm transition-colors ${isAvailable ? 'bg-black text-white hover:bg-gray-800 hover:shadow-md' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                         >
-                          Pesan Sekarang
-                          <ChevronRight className="h-4 w-4" />
+                          {isAvailable ? 'Pesan Sekarang' : 'Penuh'}
+                          {isAvailable && <ChevronRight className="h-4 w-4" />}
                         </button>
                       </div>
                     </div>
                   </div>
                 </article>
-              ))}
+              )})}
             </div>
           )}
-
-          {/* View All Button */}
-          <div className="text-center mt-12 lg:mt-16">
-            <Link
-              href="/hunian"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black text-base font-semibold rounded-xl border-2 border-black hover:bg-gray-100 hover:border-gray-800 hover:shadow-lg transition-all duration-200"
-            >
-              Lihat Semua Kamar
-              <ChevronRight className="h-5 w-5" />
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -492,26 +477,14 @@ export default function HomePage() {
               </h2>
               <div className="space-y-4 text-black leading-relaxed">
                 <p>
-                  Kost Pak Aji menyediakan kamar kost nyaman dan terjangkau sejak 2015. 
-                  Terletak strategis dekat kampus-kampus besar, kami memahami kebutuhan mahasiswa dan profesional muda.
+                  Kost Pak Aji hadir sebagai pilihan hunian yang nyaman, aman, dan terjangkau bagi mahasiswa maupun profesional muda. Berlokasi strategis dengan akses yang mudah ke kampus, tempat kerja, serta berbagai fasilitas umum, kami berkomitmen memberikan pengalaman tinggal yang praktis dan menyenangkan.
                 </p>
                 <p>
-                  Setiap kamar dirancang untuk kenyamanan Anda — dari kasur berkualitas, penyimpanan luas, 
-                  hingga internet cepat untuk belajar dan kerja. Sistem keamanan 24 jam menjamin ketenangan pikiran.
+                  Setiap kamar dirancang untuk memberikan kenyamanan maksimal dengan fasilitas yang lengkap, mulai dari tempat tidur yang nyaman, ruang penyimpanan yang memadai, akses internet berkecepatan tinggi, hingga lingkungan yang bersih dan terawat. Didukung sistem keamanan yang baik dan suasana yang tenang, Anda dapat beristirahat, belajar, maupun bekerja dengan lebih fokus.
                 </p>
                 <p className="font-medium text-black">
-                  Bergabunglah dengan 18+ penghuni puas yang menjadikan Kost Pak Aji rumah kedua mereka.
+                  Lebih dari sekadar tempat tinggal, Kost Pak Aji adalah tempat untuk membangun kenyamanan dan menjalani aktivitas sehari-hari dengan tenang. Bergabunglah bersama para penghuni yang telah mempercayakan Kost Pak Aji sebagai rumah kedua mereka.
                 </p>
-              </div>
-              <div className="mt-8">
-                <Link
-                  href="#rooms"
-                  onClick={(e) => { e.preventDefault(); scrollToSection('#rooms'); }}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 transition-colors"
-                >
-                  Lihat Kamar
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
               </div>
             </div>
           </div>
@@ -528,8 +501,7 @@ export default function HomePage() {
                 <span>Kost Pak Aji</span>
               </Link>
               <p className="text-black text-sm leading-relaxed mb-6">
-                Kamar kost nyaman dan terjangkau dengan fasilitas lengkap. 
-                Rumah kedua Anda di Bandung.
+                Kamar kost nyaman dan terjangkau dengan fasilitas lengkap.
               </p>
               <div className="flex gap-4">
                 {[
@@ -584,14 +556,10 @@ export default function HomePage() {
             <div>
               <h4 className="font-semibold text-black mb-4">Informasi Kontak</h4>
               <address className="text-gray-700 text-sm not-italic space-y-2">
-                <p>Jl. Merdeka No. 123</p>
-                <p>Bandung, Jawa Barat 40115</p>
-                <p className="mt-4">
-                  <a href="tel:+6281234567890" className="hover:text-black transition-colors">+62 812-3456-7890</a>
-                </p>
-                <p>
-                  <a href="mailto:info@kostpakaji.com" className="hover:text-black transition-colors">info@kostpakaji.com</a>
-                </p>
+                <p>-</p>
+                <p>-</p>
+                <p className="mt-4">-</p>
+                <p>-</p>
               </address>
             </div>
           </div>

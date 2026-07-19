@@ -19,67 +19,61 @@ interface User {
 }
 
 interface AuthContextType {
-    token: string | null;
     user: User | null;
-    isLoading : boolean;
+    isLoading: boolean;
 
-    loginUser: (token: string, user: User) => void;
-    logout: () => void;
+    loginUser: (user: User) => void;
+    logout: () => Promise<void>;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
-    token: null,
     user: null,
     isLoading: true,
     loginUser: () => {},
-    logout: () => {},
+    logout: async () => {},
+    refreshUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [token, setToken] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    console.log('AuthProvider initialized with token:', token, 'and user:', user);
-
-    const fetchData = async () => {
-        const savedToken = localStorage.getItem("token");
-        const savedUser = localStorage.getItem("user");
-
-        if (savedToken && savedUser) {
-            setToken(savedToken);
-            setUser(JSON.parse(savedUser));
+    const fetchUser = async () => {
+        try {
+            const response = await fetch('/api/auth/me');
+            if (response.ok) {
+                const data = await response.json();
+                setUser(data.user);
+            } else {
+                setUser(null);
+            }
+        } catch {
+            setUser(null);
+        } finally {
+            setIsLoading(false);
         }
-    }
+    };
 
     useEffect(() => {
-        async function loadAuthData() {
-            setIsLoading(true);
-            await fetchData();
-            setIsLoading(false);
-
-        }
-        loadAuthData();
+        fetchUser();
     }, []);
 
-    const loginUser = (token: string, user: User) => {
-        console.log('Login User : ', { token, user });
-        setToken(token);
-        setUser(user);
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
-    }
+    const loginUser = (newUser: User) => {
+        setUser(newUser);
+    };
 
     const logout = async () => {
         await logoutUser();
-        setToken(null);
         setUser(null);
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+    };
+
+    const refreshUser = async () => {
+        await fetchUser();
     };
 
     return (
-        <AuthContext.Provider value={{ token, user, isLoading, loginUser, logout }}>
+        <AuthContext.Provider value={{ user, isLoading, loginUser, logout, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

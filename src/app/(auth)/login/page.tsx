@@ -56,7 +56,7 @@ function LoginForm() {
         return;
       }
 
-      loginUser(response.data.token, response.data.user);
+      loginUser(response.data.user);
     } catch (error) {
       setErrorMsg('Terjadi kesalahan, coba lagi nanti');
     }

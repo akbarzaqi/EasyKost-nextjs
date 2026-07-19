@@ -1,6 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-import { setLocalStorageItem, fetchWithAccessToken, fetchWithoutAccessToken } from './auth';
+import { fetchWithAccessToken, fetchWithoutAccessToken } from './auth';
 
 const postBiaya = async (id: string, data: { wifi: number; sampah: number; kost: number;}) => {
     try {

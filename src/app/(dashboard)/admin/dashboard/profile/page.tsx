@@ -61,10 +61,7 @@ export default function AdminProfilePage() {
         } else {
             setSuccess("Profil berhasil diperbarui")
             if (response.data) {
-                loginUser(
-                    localStorage.getItem('token') || '',
-                    response.data
-                )
+                loginUser(response.data)
             }
         }
     }
@@ -86,10 +83,7 @@ export default function AdminProfilePage() {
         } else {
             setSuccess("Foto KTP berhasil diperbarui")
             if (response.data) {
-                loginUser(
-                    localStorage.getItem('token') || '',
-                    response.data
-                )
+                loginUser(response.data)
             }
         }
     }
