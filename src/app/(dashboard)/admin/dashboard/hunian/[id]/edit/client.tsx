@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { ArrowLeft, Upload, BedDouble, Wallet, FileText, ImagePlus } from 'lucide-react'
 import { getHunianById, updateHunian } from '@/lib/api/hunian'
 import { updateBiaya } from '@/lib/api/biaya'
+import { getImageUrl } from '@/lib/image'
 
 const statusLabel: Record<string, string> = {
   kosong: 'Kosong',
@@ -51,7 +52,7 @@ export default function EditHunianClient({ id }: { id: string }) {
       setType(h.tipe_hunian || '')
       setStatus(statusLabel[h.status_harian] || 'Kosong')
       setDescription(h.deskripsi_hunian || '')
-      setPreviewImage(h.gambar_hunian || '')
+      setPreviewImage(getImageUrl(h.gambar_hunian) || '')
       if (h.biaya) {
         setHargaKost(String(Number(h.biaya.kost) || 0))
         setHargaWifi(String(Number(h.biaya.wifi) || 0))
@@ -67,7 +68,7 @@ export default function EditHunianClient({ id }: { id: string }) {
     if (file) {
       setImageFile(file)
       const reader = new FileReader()
-      reader.onloadend = () => setPreviewImage(reader.result as string)
+      reader.onloadend = () => setPreviewImage(reader.result as string) // ini tetap, jangan diubah
       reader.readAsDataURL(file)
       setErrors(prev => ({ ...prev, image: '' }))
     }
