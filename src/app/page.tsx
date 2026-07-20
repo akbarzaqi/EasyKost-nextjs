@@ -320,13 +320,13 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-100 text-black rounded-full text-sm font-medium mb-4">
-              Semua Kamar
+              Kamar Tersedia
             </span>
             <h2 className="text-3xl lg:text-4xl font-bold text-black leading-tight">
-              Daftar Kamar
+              Daftar Kamar Tersedia
             </h2>
             <p className="mt-4 text-lg text-black">
-              {hunianList.length} kamar dengan fasilitas lengkap
+              {availableRooms.length} kamar siap dihuni dengan fasilitas lengkap
             </p>
           </div>
 
@@ -344,15 +344,15 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          ) : hunianList.length === 0 ? (
+          ) : availableRooms.length === 0 ? (
             <div className="text-center py-20">
               <Home className="h-16 w-16 text-black mx-auto mb-6" />
-              <h3 className="text-xl font-semibold text-black mb-2">Belum Ada Kamar</h3>
-              <p className="text-black">Belum ada kamar yang tersedia saat ini.</p>
+              <h3 className="text-xl font-semibold text-black mb-2">Belum Ada Kamar Tersedia</h3>
+              <p className="text-black">Saat ini seluruh kamar sedang terisi penuh.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {hunianList.map((hunian) => {
+              {availableRooms.map((hunian) => {
                 const isAvailable = hunian.status_harian.toLowerCase() === "kosong"
                 return (
                 <article
